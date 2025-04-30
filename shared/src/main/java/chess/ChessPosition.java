@@ -9,6 +9,7 @@ package chess;
 public class ChessPosition {
     int x;
     int y;
+    ChessPiece occupyingPiece = null;
 
     public ChessPosition(int row, int col) {
         x = row;
@@ -21,6 +22,14 @@ public class ChessPosition {
      */
     public int getRow() {
         return x;
+    }
+
+    public void setPiece(ChessPiece _piece){
+        occupyingPiece = _piece;
+    }
+
+    public ChessPiece getPiece(){
+        return occupyingPiece;
     }
 
     /**
