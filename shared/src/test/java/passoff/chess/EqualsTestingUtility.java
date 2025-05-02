@@ -83,13 +83,18 @@ public abstract class EqualsTestingUtility<T> {
 
         // Programmatically test insertion of all different items
         int expectedSetSize = 1;
+        int count = 0;
         for (var different : allDifferent) {
+            if (count == 8){
+                int test = 0;
+            }
             Assertions.assertFalse(set.contains(different),
-                    "[" + className + "] Different item should not be present in set before insertion");
+                    "[" + className + "] Different item should not be present in set before insertion. Error on index of item: " + count);
             set.add(different);
             expectedSetSize++;
             Assertions.assertEquals(expectedSetSize, set.size(),
                     "[" + className + "] New item was counted as different during insertion");
+            count++;
         }
 
     }

@@ -3,6 +3,7 @@ package chess;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * A chessboard that can hold and rearrange chess pieces.
@@ -12,8 +13,11 @@ import java.util.Objects;
  */
 public class ChessBoard {
     public List<ChessPosition> boardPositions = new ArrayList<>();
+    String testStringRep = "";
+    UUID uuid;
 
     public ChessBoard() {
+        this.uuid = UUID.randomUUID();
         for(int x = 0; x < 8; x++){
             for(int y = 0; y < 8; y++){
                 boardPositions.add(new ChessPosition(x, y));
@@ -27,36 +31,44 @@ public class ChessBoard {
         return Objects.hash(boardPositions);
     }
 
-    public String boardToString(){
+    @Override
+    public String toString(){
         String stringRep = "";
 
-        for(int x = 0; x < 8; x++){
+        for(int x = 7; x > -1; x--){
             for(int y = 0; y < 8; y++){
                 ChessPosition pos = getPosition(x, y);
 
-                String middle = "";
+                String middle = " ";
+                String pieceChar = pos.getPieceString();
+                if(pieceChar != null){
+                    middle = pieceChar;
+                }
 
-                if (x == 0){
+                if (y == 0){
                     stringRep += "|";
                 }
                 stringRep += middle;
                 stringRep += "|";
-                if (x == 7){
+                if (y == 7){
                     stringRep += "\n";
                 }
             }
         }
+        testStringRep = stringRep;
+        return stringRep;
     }
 
     @Override
     public boolean equals(Object obj) {
+        int test = 0;
         try {
 
-            ChessBoard castedObj = (ChessBoard)obj;
+            String otherObj = obj.toString();
 
-            String stringRepresentation = boardToString();
+            String stringRepresentation = toString();
 
-            return (obj instanceof ChessBoard) && (stringRepresentation == castedObj);
+            return (stringRepresentation.equals(otherObj));
         } catch(Exception e){
             return false;
         }
@@ -136,7 +148,7 @@ public class ChessBoard {
         getPosition(7, 5).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP));
         getPosition(7, 6).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT));
         getPosition(7, 7).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
-
+        toString();
     }
 }
 

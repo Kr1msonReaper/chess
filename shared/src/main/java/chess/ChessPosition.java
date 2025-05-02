@@ -34,50 +34,54 @@ public class ChessPosition {
         return occupyingPiece;
     }
 
-    public String getPieceString(ChessPiece piece){
-        if (piece.getPieceType() == ChessPiece.PieceType.PAWN){
-            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+    public String getPieceString(){
+        if (occupyingPiece == null){
+            return " ";
+        }
+
+        if (occupyingPiece.getPieceType() == ChessPiece.PieceType.PAWN){
+            if (occupyingPiece.getTeamColor() == ChessGame.TeamColor.WHITE){
                 return "P";
             } else {
                 return "p";
             }
         }
-        if (piece.getPieceType() == ChessPiece.PieceType.ROOK){
-            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+        if (occupyingPiece.getPieceType() == ChessPiece.PieceType.ROOK){
+            if (occupyingPiece.getTeamColor() == ChessGame.TeamColor.WHITE){
                 return "R";
             } else {
                 return "r";
             }
         }
-        if (piece.getPieceType() == ChessPiece.PieceType.KNIGHT){
-            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+        if (occupyingPiece.getPieceType() == ChessPiece.PieceType.KNIGHT){
+            if (occupyingPiece.getTeamColor() == ChessGame.TeamColor.WHITE){
                 return "N";
             } else {
                 return "n";
             }
         }
-        if (piece.getPieceType() == ChessPiece.PieceType.BISHOP){
-            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+        if (occupyingPiece.getPieceType() == ChessPiece.PieceType.BISHOP){
+            if (occupyingPiece.getTeamColor() == ChessGame.TeamColor.WHITE){
                 return "B";
             } else {
                 return "b";
             }
         }
-        if (piece.getPieceType() == ChessPiece.PieceType.QUEEN){
-            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+        if (occupyingPiece.getPieceType() == ChessPiece.PieceType.QUEEN){
+            if (occupyingPiece.getTeamColor() == ChessGame.TeamColor.WHITE){
                 return "Q";
             } else {
                 return "q";
             }
         }
-        if (piece.getPieceType() == ChessPiece.PieceType.KING){
-            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+        if (occupyingPiece.getPieceType() == ChessPiece.PieceType.KING){
+            if (occupyingPiece.getTeamColor() == ChessGame.TeamColor.WHITE){
                 return "K";
             } else {
                 return "k";
             }
         }
-        return null;
+        return " ";
     }
 
     /**
@@ -90,7 +94,7 @@ public class ChessPosition {
 
     @Override
     public int hashCode() {
-        return Objects.hash(Integer.toString(x) + Integer.toString(y));
+        return Objects.hash(Integer.toString(x) + Integer.toString(y) + getPieceString());
     }
 
     @Override
@@ -98,7 +102,10 @@ public class ChessPosition {
         try {
             ChessPosition castedObj = (ChessPosition)obj;
 
-            return (obj instanceof ChessPosition) && (Objects.hash(Integer.toString(x) + Integer.toString(y)) == Objects.hash(Integer.toString(castedObj.x) + Integer.toString(castedObj.y)));
+            int one = Objects.hash(Integer.toString(x) + Integer.toString(y) + occupyingPiece);
+            int two = Objects.hash(Integer.toString(castedObj.x) + Integer.toString(castedObj.y) + occupyingPiece);
+
+            return (Objects.hash(Integer.toString(x) + Integer.toString(y) + getPieceString()) == Objects.hash(Integer.toString(castedObj.x) + Integer.toString(castedObj.y) + getPieceString()));
         } catch(Exception e){
             return false;
         }
