@@ -1,6 +1,7 @@
 package chess;
 
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Represents a single chess piece
@@ -9,8 +10,8 @@ import java.util.Collection;
  * signature of the existing methods.
  */
 public class ChessPiece {
-    ChessGame.TeamColor team;
-    ChessPiece.PieceType pieceType;
+    public ChessGame.TeamColor team;
+    public ChessPiece.PieceType pieceType;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         team = pieceColor;
@@ -19,12 +20,18 @@ public class ChessPiece {
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(team.name() + pieceType.name());
     }
 
     @Override
     public boolean equals(Object obj) {
-        return super.equals(obj);
+        try {
+            ChessPiece castedObj = (ChessPiece)obj;
+
+            return (obj instanceof ChessPiece) && (Objects.hash(team.name() + pieceType.name()) == Objects.hash(castedObj.team.name() + castedObj.pieceType.name()));
+        } catch(Exception e){
+            return false;
+        }
     }
 
     /**

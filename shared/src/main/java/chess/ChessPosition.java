@@ -1,5 +1,7 @@
 package chess;
 
+import java.util.Objects;
+
 /**
  * Represents a single square position on a chess board
  * <p>
@@ -7,8 +9,8 @@ package chess;
  * signature of the existing methods.
  */
 public class ChessPosition {
-    int x;
-    int y;
+    public int x;
+    public int y;
     ChessPiece occupyingPiece = null;
 
     public ChessPosition(int row, int col) {
@@ -32,6 +34,52 @@ public class ChessPosition {
         return occupyingPiece;
     }
 
+    public String getPieceString(ChessPiece piece){
+        if (piece.getPieceType() == ChessPiece.PieceType.PAWN){
+            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return "P";
+            } else {
+                return "p";
+            }
+        }
+        if (piece.getPieceType() == ChessPiece.PieceType.ROOK){
+            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return "R";
+            } else {
+                return "r";
+            }
+        }
+        if (piece.getPieceType() == ChessPiece.PieceType.KNIGHT){
+            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return "N";
+            } else {
+                return "n";
+            }
+        }
+        if (piece.getPieceType() == ChessPiece.PieceType.BISHOP){
+            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return "B";
+            } else {
+                return "b";
+            }
+        }
+        if (piece.getPieceType() == ChessPiece.PieceType.QUEEN){
+            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return "Q";
+            } else {
+                return "q";
+            }
+        }
+        if (piece.getPieceType() == ChessPiece.PieceType.KING){
+            if (piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return "K";
+            } else {
+                return "k";
+            }
+        }
+        return null;
+    }
+
     /**
      * @return which column this position is in
      * 1 codes for the left row
@@ -42,11 +90,17 @@ public class ChessPosition {
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(Integer.toString(x) + Integer.toString(y));
     }
 
     @Override
     public boolean equals(Object obj) {
-        return super.equals(obj);
+        try {
+            ChessPosition castedObj = (ChessPosition)obj;
+
+            return (obj instanceof ChessPosition) && (Objects.hash(Integer.toString(x) + Integer.toString(y)) == Objects.hash(Integer.toString(castedObj.x) + Integer.toString(castedObj.y)));
+        } catch(Exception e){
+            return false;
+        }
     }
 }

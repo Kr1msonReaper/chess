@@ -2,6 +2,7 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A chessboard that can hold and rearrange chess pieces.
@@ -10,24 +11,55 @@ import java.util.List;
  * signature of the existing methods.
  */
 public class ChessBoard {
-    List<ChessPosition> boardPositions = new ArrayList<>();
+    public List<ChessPosition> boardPositions = new ArrayList<>();
 
     public ChessBoard() {
         for(int x = 0; x < 8; x++){
             for(int y = 0; y < 8; y++){
                 boardPositions.add(new ChessPosition(x, y));
+                //boardPositions.hashCode()
             }
         }
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(boardPositions);
+    }
+
+    public String boardToString(){
+        String stringRep = "";
+
+        for(int x = 0; x < 8; x++){
+            for(int y = 0; y < 8; y++){
+                ChessPosition pos = getPosition(x, y);
+
+                String middle = "";
+
+                if (x == 0){
+                    stringRep += "|";
+                }
+                stringRep += middle;
+                stringRep += "|";
+                if (x == 7){
+                    stringRep += "\n";
+                }
+            }
+        }
     }
 
     @Override
     public boolean equals(Object obj) {
-        return super.equals(obj);
+        try {
+
+            ChessBoard castedObj = (ChessBoard)obj;
+
+            String stringRepresentation = boardToString();
+
+            return (obj instanceof ChessBoard) && (stringRepresentation == castedObj);
+        } catch(Exception e){
+            return false;
+        }
     }
 
     /**
@@ -96,14 +128,14 @@ public class ChessBoard {
         getPosition(0, 6).setPiece(new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT));
         getPosition(0, 7).setPiece(new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK));
 
-        getPosition(7, 0).setPiece(new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK));
-        getPosition(7, 1).setPiece(new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT));
-        getPosition(7, 2).setPiece(new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP));
-        getPosition(7, 3).setPiece(new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.QUEEN));
-        getPosition(7, 4).setPiece(new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KING));
-        getPosition(7, 5).setPiece(new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP));
-        getPosition(7, 6).setPiece(new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT));
-        getPosition(7, 7).setPiece(new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK));
+        getPosition(7, 0).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
+        getPosition(7, 1).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT));
+        getPosition(7, 2).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP));
+        getPosition(7, 3).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.QUEEN));
+        getPosition(7, 4).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KING));
+        getPosition(7, 5).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP));
+        getPosition(7, 6).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT));
+        getPosition(7, 7).setPiece(new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
 
     }
 }
