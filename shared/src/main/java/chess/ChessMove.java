@@ -1,6 +1,7 @@
 package chess;
 
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Represents moving a chess piece on a chessboard
@@ -51,7 +52,7 @@ public class ChessMove {
 
     @Override
     public int hashCode() {
-        return Objects.hash(startPos.toString() + endPos.toString());
+        return Objects.hash(1);
     }
 
     @Override
@@ -59,7 +60,7 @@ public class ChessMove {
         try {
             ChessMove castedObj = (ChessMove)obj;
 
-            return (obj instanceof ChessMove) && (Objects.hash(startPos.toString() + endPos.toString()) == Objects.hash(castedObj.startPos.toString() + castedObj.endPos.toString()));
+            return startPos.equals(castedObj.startPos) && endPos.equals(castedObj.endPos);
         } catch(Exception e){
             return false;
         }

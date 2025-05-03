@@ -105,6 +105,37 @@ public class ChessPiece {
         return validatedMoves;
     }
 
+    public Collection<ChessMove> addMoves(ChessBoard board, ChessPosition myPosition, int xDir, int yDir){
+        Collection<ChessMove> potentialMoves = new ArrayList<>();
+
+        int potentialX = myPosition.x;
+        int potentialY = myPosition.y;
+        while(true){
+            if(potentialX == 1 && xDir < 0){ break; } else if(potentialX == 8 && xDir > 0){ break; }
+            if(potentialY == 1 && yDir < 0){ break; } else if(potentialY == 8 && yDir > 0){ break; }
+
+            potentialX += xDir;
+            potentialY += yDir;
+
+            ChessPosition nextPos = new ChessPosition(potentialX, potentialY);
+            ChessPiece pc = board.getPiece(nextPos);
+            if (pc == null){
+                ChessMove nextMove = new ChessMove(myPosition, nextPos, null);
+                potentialMoves.add(nextMove);
+                continue;
+            }
+            if(pc.getTeamColor() != team){
+                ChessMove nextMove = new ChessMove(myPosition, nextPos, null);
+                potentialMoves.add(nextMove);
+                break;
+            } else {
+                break;
+            }
+        }
+
+        return validateMoves(potentialMoves);
+    }
+
     /**
      * Calculates all the positions a chess piece can move to
      * Does not take into account moves that are illegal due to leaving the king in
@@ -197,6 +228,47 @@ public class ChessPiece {
             if (board.getPiece(rightDown) == null || board.getPiece(rightDown).getTeamColor() != team){ potentialMoves.add(moveRightDown); }
             if (board.getPiece(downLeft) == null || board.getPiece(downLeft).getTeamColor() != team){ potentialMoves.add(moveDownLeft); }
             if (board.getPiece(downRight) == null || board.getPiece(downRight).getTeamColor() != team){ potentialMoves.add(moveDownRight); }
+        }
+
+        if(pieceType == PieceType.ROOK){
+            Collection<ChessMove> up = addMoves(board, myPosition, 1, 0);
+            Collection<ChessMove> down = addMoves(board, myPosition, -1, 0);
+            Collection<ChessMove> left = addMoves(board, myPosition, 0, -1);
+            Collection<ChessMove> right = addMoves(board, myPosition, 0, 1);
+            potentialMoves.addAll(up);
+            potentialMoves.addAll(down);
+            potentialMoves.addAll(left);
+            potentialMoves.addAll(right);
+        }
+
+        if(pieceType == PieceType.QUEEN){
+            Collection<ChessMove> up = addMoves(board, myPosition, 1, 0);
+            Collection<ChessMove> upLeft = addMoves(board, myPosition, 1, -1);
+            Collection<ChessMove> upRight = addMoves(board, myPosition, 1, 1);
+            Collection<ChessMove> down = addMoves(board, myPosition, -1, 0);
+            Collection<ChessMove> downLeft = addMoves(board, myPosition, -1, -1);
+            Collection<ChessMove> downRight = addMoves(board, myPosition, -1, 1);
+            Collection<ChessMove> left = addMoves(board, myPosition, 0, -1);
+            Collection<ChessMove> right = addMoves(board, myPosition, 0, 1);
+            potentialMoves.addAll(up);
+            potentialMoves.addAll(upLeft);
+            potentialMoves.addAll(upRight);
+            potentialMoves.addAll(down);
+            potentialMoves.addAll(downLeft);
+            potentialMoves.addAll(downRight);
+            potentialMoves.addAll(left);
+            potentialMoves.addAll(right);
+        }
+
+        if(pieceType == PieceType.BISHOP){
+            Collection<ChessMove> upLeft = addMoves(board, myPosition, 1, -1);
+            Collection<ChessMove> upRight = addMoves(board, myPosition, 1, 1);
+            Collection<ChessMove> downLeft = addMoves(board, myPosition, -1, -1);
+            Collection<ChessMove> downRight = addMoves(board, myPosition, -1, 1);
+            potentialMoves.addAll(upLeft);
+            potentialMoves.addAll(upRight);
+            potentialMoves.addAll(downLeft);
+            potentialMoves.addAll(downRight);
         }
 
         return validateMoves(potentialMoves);
