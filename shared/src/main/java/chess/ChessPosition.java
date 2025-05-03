@@ -102,9 +102,6 @@ public class ChessPosition {
         try {
             ChessPosition castedObj = (ChessPosition)obj;
 
-            int one = Objects.hash(Integer.toString(x) + Integer.toString(y) + occupyingPiece);
-            int two = Objects.hash(Integer.toString(castedObj.x) + Integer.toString(castedObj.y) + occupyingPiece);
-
             return (Objects.hash(Integer.toString(x) + Integer.toString(y) + getPieceString()) == Objects.hash(Integer.toString(castedObj.x) + Integer.toString(castedObj.y) + getPieceString()));
         } catch(Exception e){
             return false;

@@ -1,5 +1,7 @@
 package chess;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -60,6 +62,27 @@ public class ChessPiece {
         return pieceType;
     }
 
+    public Collection<ChessMove> validateMoves(Collection<ChessMove> moves){
+        Collection<ChessMove> validatedMoves = new ArrayList<>();
+
+        for(ChessMove move : moves){
+            if ((move.endPos.x >= 1 && move.endPos.x <= 8) && (move.endPos.y >= 1 && move.endPos.y <= 8)){
+
+                if(pieceType == PieceType.PAWN){
+                    if(move.endPos.x == 8 && team == ChessGame.TeamColor.WHITE){
+                        move.proPiece = PieceType.QUEEN;
+                    }
+                    if(move.endPos.x == 1 && team == ChessGame.TeamColor.BLACK){
+                        move.proPiece = PieceType.QUEEN;
+                    }
+                }
+
+                validatedMoves.add(move);
+            }
+        }
+        return validatedMoves;
+    }
+
     /**
      * Calculates all the positions a chess piece can move to
      * Does not take into account moves that are illegal due to leaving the king in
@@ -68,6 +91,34 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        throw new RuntimeException("Not implemented");
+        Collection<ChessMove> potentialMoves = new ArrayList<>();
+
+        if (pieceType == PieceType.PAWN && team == ChessGame.TeamColor.WHITE){
+            ChessPosition forwardPos = new ChessPosition(myPosition.x + 1, myPosition.y);
+            ChessPosition diagLeftPos = new ChessPosition(myPosition.x + 1, myPosition.y - 1);
+            ChessPosition diagRightPos = new ChessPosition(myPosition.x + 1, myPosition.y + 1);
+            ChessMove forwardMove = new ChessMove(myPosition, forwardPos, null);
+            ChessMove diagLeftMove = new ChessMove(myPosition, diagLeftPos, null);
+            ChessMove diagRightMove = new ChessMove(myPosition, diagRightPos, null);
+            if (board.getPiece(forwardPos) == null){ potentialMoves.add(forwardMove); }
+            if (board.getPiece(diagLeftPos) != null && board.getPiece(diagLeftPos).getTeamColor() == ChessGame.TeamColor.BLACK){ potentialMoves.add(diagLeftMove); }
+            if (board.getPiece(diagRightPos) != null && board.getPiece(diagRightPos).getTeamColor() == ChessGame.TeamColor.BLACK){ potentialMoves.add(diagRightMove); }
+
+        } else if(pieceType == PieceType.PAWN && team == ChessGame.TeamColor.BLACK){
+
+            ChessPosition forwardPos = new ChessPosition(myPosition.x - 1, myPosition.y);
+            ChessPosition diagLeftPos = new ChessPosition(myPosition.x - 1, myPosition.y - 1);
+            ChessPosition diagRightPos = new ChessPosition(myPosition.x - 1, myPosition.y + 1);
+            ChessMove forwardMove = new ChessMove(myPosition, forwardPos, null);
+            ChessMove diagLeftMove = new ChessMove(myPosition, diagLeftPos, null);
+            ChessMove diagRightMove = new ChessMove(myPosition, diagRightPos, null);
+            if (board.getPiece(forwardPos) == null){ potentialMoves.add(forwardMove); }
+            if (board.getPiece(diagLeftPos) != null && board.getPiece(diagLeftPos).getTeamColor() == ChessGame.TeamColor.WHITE){ potentialMoves.add(diagLeftMove); }
+            if (board.getPiece(diagRightPos) != null && board.getPiece(diagRightPos).getTeamColor() == ChessGame.TeamColor.WHITE){ potentialMoves.add(diagRightMove); }
+        }
+
+
+
+        return validateMoves(potentialMoves);
     }
 }
