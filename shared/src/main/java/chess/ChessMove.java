@@ -19,6 +19,12 @@ public class ChessMove {
         proPiece = promotionPiece;
     }
 
+    public ChessMove(ChessMove move) {
+        startPos = move.startPos;
+        endPos = move.endPos;
+        proPiece = move.proPiece;
+    }
+
     /**
      * @return ChessPosition of starting location
      */
@@ -58,4 +64,5 @@ public class ChessMove {
             return false;
         }
     }
+
 }

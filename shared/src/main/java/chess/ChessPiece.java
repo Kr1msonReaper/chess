@@ -71,9 +71,31 @@ public class ChessPiece {
                 if(pieceType == PieceType.PAWN){
                     if(move.endPos.x == 8 && team == ChessGame.TeamColor.WHITE){
                         move.proPiece = PieceType.QUEEN;
+                        ChessMove move1 = new ChessMove(move);
+                        move1.proPiece = PieceType.KNIGHT;
+                        ChessMove move2 = new ChessMove(move);
+                        move2.proPiece = PieceType.BISHOP;
+                        ChessMove move3 = new ChessMove(move);
+                        move3.proPiece = PieceType.ROOK;
+                        validatedMoves.add(move);
+                        validatedMoves.add(move1);
+                        validatedMoves.add(move2);
+                        validatedMoves.add(move3);
+                        continue;
                     }
                     if(move.endPos.x == 1 && team == ChessGame.TeamColor.BLACK){
                         move.proPiece = PieceType.QUEEN;
+                        ChessMove move1 = new ChessMove(move);
+                        move1.proPiece = PieceType.KNIGHT;
+                        ChessMove move2 = new ChessMove(move);
+                        move2.proPiece = PieceType.BISHOP;
+                        ChessMove move3 = new ChessMove(move);
+                        move3.proPiece = PieceType.ROOK;
+                        validatedMoves.add(move);
+                        validatedMoves.add(move1);
+                        validatedMoves.add(move2);
+                        validatedMoves.add(move3);
+                        continue;
                     }
                 }
 
@@ -97,24 +119,30 @@ public class ChessPiece {
             ChessPosition forwardPos = new ChessPosition(myPosition.x + 1, myPosition.y);
             ChessPosition diagLeftPos = new ChessPosition(myPosition.x + 1, myPosition.y - 1);
             ChessPosition diagRightPos = new ChessPosition(myPosition.x + 1, myPosition.y + 1);
+            ChessPosition doubleForwardPos = new ChessPosition(myPosition.x + 2, myPosition.y);
             ChessMove forwardMove = new ChessMove(myPosition, forwardPos, null);
             ChessMove diagLeftMove = new ChessMove(myPosition, diagLeftPos, null);
             ChessMove diagRightMove = new ChessMove(myPosition, diagRightPos, null);
+            ChessMove doubleForwardMove = new ChessMove(myPosition, doubleForwardPos, null);
             if (board.getPiece(forwardPos) == null){ potentialMoves.add(forwardMove); }
             if (board.getPiece(diagLeftPos) != null && board.getPiece(diagLeftPos).getTeamColor() == ChessGame.TeamColor.BLACK){ potentialMoves.add(diagLeftMove); }
             if (board.getPiece(diagRightPos) != null && board.getPiece(diagRightPos).getTeamColor() == ChessGame.TeamColor.BLACK){ potentialMoves.add(diagRightMove); }
+            if (board.getPiece(doubleForwardPos) == null && board.getPiece(forwardPos) == null && (myPosition.x == 2 && team == ChessGame.TeamColor.WHITE)){ potentialMoves.add(doubleForwardMove); }
 
         } else if(pieceType == PieceType.PAWN && team == ChessGame.TeamColor.BLACK){
 
             ChessPosition forwardPos = new ChessPosition(myPosition.x - 1, myPosition.y);
             ChessPosition diagLeftPos = new ChessPosition(myPosition.x - 1, myPosition.y - 1);
             ChessPosition diagRightPos = new ChessPosition(myPosition.x - 1, myPosition.y + 1);
+            ChessPosition doubleForwardPos = new ChessPosition(myPosition.x - 2, myPosition.y);
             ChessMove forwardMove = new ChessMove(myPosition, forwardPos, null);
             ChessMove diagLeftMove = new ChessMove(myPosition, diagLeftPos, null);
             ChessMove diagRightMove = new ChessMove(myPosition, diagRightPos, null);
+            ChessMove doubleForwardMove = new ChessMove(myPosition, doubleForwardPos, null);
             if (board.getPiece(forwardPos) == null){ potentialMoves.add(forwardMove); }
             if (board.getPiece(diagLeftPos) != null && board.getPiece(diagLeftPos).getTeamColor() == ChessGame.TeamColor.WHITE){ potentialMoves.add(diagLeftMove); }
             if (board.getPiece(diagRightPos) != null && board.getPiece(diagRightPos).getTeamColor() == ChessGame.TeamColor.WHITE){ potentialMoves.add(diagRightMove); }
+            if (board.getPiece(doubleForwardPos) == null && board.getPiece(forwardPos) == null && (myPosition.x == 7 && team == ChessGame.TeamColor.BLACK)){ potentialMoves.add(doubleForwardMove); }
         }
 
 
