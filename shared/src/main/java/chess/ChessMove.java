@@ -52,7 +52,7 @@ public class ChessMove {
 
     @Override
     public int hashCode() {
-        return Objects.hash(1);
+        return Objects.hash(startPos, endPos, proPiece);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class ChessMove {
         try {
             ChessMove castedObj = (ChessMove)obj;
 
-            return startPos.equals(castedObj.startPos) && endPos.equals(castedObj.endPos);
+            return startPos.equals(castedObj.startPos) && endPos.equals(castedObj.endPos) && Objects.equals(proPiece, castedObj.proPiece);
         } catch(Exception e){
             return false;
         }
