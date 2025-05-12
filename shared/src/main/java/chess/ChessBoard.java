@@ -14,16 +14,17 @@ import java.util.UUID;
 public class ChessBoard {
     public List<ChessPosition> boardPositions = new ArrayList<>();
     String testStringRep = "";
-    UUID uuid;
+    public static ChessBoard existingBoard = new ChessBoard();
 
     public ChessBoard() {
-        this.uuid = UUID.randomUUID();
+
         for(int x = 1; x < 9; x++){
             for(int y = 1; y < 9; y++){
                 boardPositions.add(new ChessPosition(x, y));
                 //boardPositions.hashCode()
             }
         }
+        ChessBoard.existingBoard = this;
     }
 
     @Override
@@ -65,8 +66,12 @@ public class ChessBoard {
         try {
 
             String otherObj = obj.toString();
-
             String stringRepresentation = toString();
+
+            System.out.println("Real class:\n");
+            System.out.println(stringRepresentation + "\n ---------------------------");
+            System.out.println("Compared object:\n");
+            System.out.println(otherObj + "\n ---------------------------");
 
             return (stringRepresentation.equals(otherObj));
         } catch(Exception e){

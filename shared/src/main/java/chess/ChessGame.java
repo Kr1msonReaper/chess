@@ -10,16 +10,17 @@ import java.util.Collection;
  */
 public class ChessGame {
     ChessBoard board;
+    TeamColor currentTurn = TeamColor.WHITE;
 
-    public ChessGame(ChessBoard _board) {
-        board = _board;
+    public ChessGame() {
+        board = ChessBoard.existingBoard;
     }
 
     /**
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        throw new RuntimeException("Not implemented");
+        return currentTurn;
     }
 
     /**
@@ -28,7 +29,15 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        throw new RuntimeException("Not implemented");
+        currentTurn = team;
+    }
+
+    public void nextTurn(){
+        if(currentTurn == TeamColor.WHITE){
+            currentTurn = TeamColor.BLACK;
+        } else {
+            currentTurn = TeamColor.WHITE;
+        }
     }
 
     /**
@@ -47,7 +56,11 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        if(ChessBoard.existingBoard.getPosition(startPosition.x, startPosition.y).occupyingPiece != null){
+            return ChessBoard.existingBoard.getPosition(startPosition.x, startPosition.y).occupyingPiece.pieceMoves(board, startPosition);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -57,7 +70,9 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        ChessBoard.existingBoard.getPosition(move.endPos.x, move.endPos.y).occupyingPiece = move.startPos.occupyingPiece;
+        ChessBoard.existingBoard.getPosition(move.startPos.x, move.startPos.y).occupyingPiece = null;
+        nextTurn();
     }
 
     /**

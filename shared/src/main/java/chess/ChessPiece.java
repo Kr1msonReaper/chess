@@ -14,6 +14,7 @@ import java.util.Objects;
 public class ChessPiece {
     public ChessGame.TeamColor team;
     public ChessPiece.PieceType pieceType;
+    public boolean isInCheck = false;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         team = pieceColor;
