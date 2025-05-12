@@ -82,7 +82,34 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        for(ChessPosition pos : ChessBoard.existingBoard.boardPositions){
+            if(teamColor == TeamColor.BLACK){
+                if(pos.occupyingPiece != null){
+                    if(pos.occupyingPiece.getTeamColor() == TeamColor.WHITE){
+                        for(ChessMove mv : pos.occupyingPiece.pieceMoves(ChessBoard.existingBoard, pos)){
+                            if(mv.endPos.occupyingPiece != null){
+                                if(mv.endPos.occupyingPiece.pieceType == ChessPiece.PieceType.KING && mv.endPos.occupyingPiece.getTeamColor() == TeamColor.BLACK){
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                if(pos.occupyingPiece != null){
+                    if(pos.occupyingPiece.getTeamColor() == TeamColor.BLACK){
+                        for(ChessMove mv : pos.occupyingPiece.pieceMoves(ChessBoard.existingBoard, pos)){
+                            if(mv.endPos.occupyingPiece != null){
+                                if(mv.endPos.occupyingPiece.pieceType == ChessPiece.PieceType.KING && mv.endPos.occupyingPiece.getTeamColor() == TeamColor.WHITE){
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -113,6 +140,7 @@ public class ChessGame {
      */
     public void setBoard(ChessBoard board) {
         this.board = board;
+        ChessBoard.existingBoard = board;
     }
 
     /**
@@ -121,6 +149,6 @@ public class ChessGame {
      * @return the chessboard
      */
     public ChessBoard getBoard() {
-        return board;
+        return ChessBoard.existingBoard;
     }
 }
