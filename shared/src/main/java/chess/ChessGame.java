@@ -134,7 +134,7 @@ public class ChessGame {
                         for(ChessMove mv : pos.occupyingPiece.pieceMoves(ChessBoard.existingBoard, pos)){
                             if(mv.endPos.occupyingPiece != null){
                                 if(mv.endPos.occupyingPiece.pieceType == ChessPiece.PieceType.KING && mv.endPos.occupyingPiece.getTeamColor() == TeamColor.BLACK){
-                                    whiteInCheck = true;
+                                    blackInCheck = true;
                                     return true;
                                 }
                             }
@@ -147,7 +147,7 @@ public class ChessGame {
                         for(ChessMove mv : pos.occupyingPiece.pieceMoves(ChessBoard.existingBoard, pos)){
                             if(mv.endPos.occupyingPiece != null){
                                 if(mv.endPos.occupyingPiece.pieceType == ChessPiece.PieceType.KING && mv.endPos.occupyingPiece.getTeamColor() == TeamColor.WHITE){
-                                    blackInCheck = true;
+                                    whiteInCheck = true;
                                     return true;
                                 }
                             }

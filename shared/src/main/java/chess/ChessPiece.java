@@ -104,13 +104,15 @@ public class ChessPiece {
         }
 
         if((team == ChessGame.TeamColor.WHITE && ChessGame.game.whiteInCheck) || (team == ChessGame.TeamColor.BLACK && ChessGame.game.blackInCheck)){
+            Collection<ChessMove> movesToRemove = new ArrayList<>();
             for(ChessMove mv : validatedMoves){
                 ChessBoard nextBoard = new ChessBoard(false);
                 ChessGame.game.makeMoveAStepAhead(nextBoard, mv);
                 if(ChessGame.game.isInCheckAStepAhead(nextBoard, team)){
-                    validatedMoves.remove(mv);
+                    movesToRemove.add(mv);
                 }
             }
+            validatedMoves.removeAll(movesToRemove);
         }
         return validatedMoves;
     }
