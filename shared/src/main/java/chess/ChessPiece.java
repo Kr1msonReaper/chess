@@ -14,7 +14,6 @@ import java.util.Objects;
 public class ChessPiece {
     public ChessGame.TeamColor team;
     public ChessPiece.PieceType pieceType;
-    public boolean isInCheck = false;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         team = pieceColor;
@@ -103,6 +102,16 @@ public class ChessPiece {
                 validatedMoves.add(move);
             }
         }
+
+        if((team == ChessGame.TeamColor.WHITE && ChessGame.game.whiteInCheck) || (team == ChessGame.TeamColor.BLACK && ChessGame.game.blackInCheck)){
+            for(ChessMove mv : validatedMoves){
+                ChessBoard nextBoard = new ChessBoard(false);
+                ChessGame.game.makeMoveAStepAhead(nextBoard, mv);
+                if(ChessGame.game.isInCheckAStepAhead(nextBoard, team)){
+                    validatedMoves.remove(mv);
+                }
+            }
+        }
         return validatedMoves;
     }
 
@@ -126,7 +135,9 @@ public class ChessPiece {
                 continue;
             }
             if(pc.getTeamColor() != team){
-                ChessMove nextMove = new ChessMove(myPosition, nextPos, null);
+                ChessPosition targetPos = new ChessPosition(nextPos.x, nextPos.y);
+                targetPos.occupyingPiece = pc;
+                ChessMove nextMove = new ChessMove(myPosition, targetPos, null);
                 potentialMoves.add(nextMove);
                 break;
             } else {
@@ -146,6 +157,8 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         Collection<ChessMove> potentialMoves = new ArrayList<>();
+
+        myPosition.occupyingPiece = this;
 
         if (pieceType == PieceType.PAWN && team == ChessGame.TeamColor.WHITE){
             ChessPosition forwardPos = new ChessPosition(myPosition.x + 1, myPosition.y);

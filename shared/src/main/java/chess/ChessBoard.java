@@ -27,6 +27,23 @@ public class ChessBoard {
         ChessBoard.existingBoard = this;
     }
 
+    public ChessBoard(boolean mainBoard) {
+
+        for(int x = 1; x < 9; x++){
+            for(int y = 1; y < 9; y++){
+                boardPositions.add(new ChessPosition(x, y));
+                //boardPositions.hashCode()
+            }
+        }
+
+        for(int x = 1; x < 9; x++){
+            for(int y = 1; y < 9; y++){
+                ChessPosition newPos = getPosition(x, y);
+                newPos.setPiece(existingBoard.getPosition(x, y).getPiece());
+            }
+        }
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(boardPositions);
