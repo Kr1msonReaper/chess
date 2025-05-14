@@ -62,13 +62,14 @@ public class ChessGame {
             return false;
         }
         ChessGame chessGame = (ChessGame) o;
-        return blackInCheck == chessGame.blackInCheck && whiteInCheck == chessGame.whiteInCheck && blackInCheckmate == chessGame.blackInCheckmate && whiteInCheckmate == chessGame.whiteInCheckmate && Objects.equals(board, chessGame.board) && currentTurn == chessGame.currentTurn;
+        return blackInCheck == chessGame.blackInCheck && whiteInCheck == chessGame.whiteInCheck && blackInCheckmate == chessGame.blackInCheckmate && whiteInCheckmate == chessGame.whiteInCheckmate && amChecking == chessGame.amChecking && Objects.equals(board, chessGame.board) && currentTurn == chessGame.currentTurn && Objects.equals(possibleMoves, chessGame.possibleMoves);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(board, currentTurn, blackInCheck, whiteInCheck, blackInCheckmate, whiteInCheckmate);
+        return Objects.hash(board, currentTurn, blackInCheck, whiteInCheck, blackInCheckmate, whiteInCheckmate, amChecking, possibleMoves);
     }
+
 
     /**
      * Enum identifying the 2 possible teams in a chess game
