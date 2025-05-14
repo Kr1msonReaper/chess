@@ -180,6 +180,9 @@ public class ChessGame {
                 }
             } else {
                 if(pos.occupyingPiece != null){
+                    if(pos.x == 5 && pos.y == 4){
+                        int test = 1;
+                    }
                     if(pos.occupyingPiece.getTeamColor() == TeamColor.BLACK){
                         for(ChessMove mv : pos.occupyingPiece.pieceMoves(nextBoard, pos)){
                             if(mv.endPos.occupyingPiece != null){
@@ -196,6 +199,7 @@ public class ChessGame {
     }
 
     public void getPossibleMoves(){
+        possibleMoves.clear();
         for(ChessPosition pos : ChessBoard.existingBoard.boardPositions){
             if(pos.occupyingPiece != null){
                 if(pos.occupyingPiece.getTeamColor() == currentTurn){
@@ -213,7 +217,7 @@ public class ChessGame {
      */
     public boolean isInCheckmate(TeamColor teamColor) {
         isInCheck(teamColor);
-
+        getPossibleMoves();
         System.out.println("Possible moves: " + possibleMoves.size());
 
         if(possibleMoves.size() == 0){
