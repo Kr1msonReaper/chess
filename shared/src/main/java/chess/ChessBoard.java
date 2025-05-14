@@ -24,7 +24,7 @@ public class ChessBoard {
                 //boardPositions.hashCode()
             }
         }
-        ChessBoard.existingBoard = this;
+        //ChessBoard.existingBoard = this;
     }
 
     public ChessBoard(boolean mainBoard) {

@@ -23,7 +23,8 @@ public class ChessGame {
 
     public ChessGame() {
         game = this;
-        board = ChessBoard.existingBoard;
+        //board = ChessGame.game.getBoard();
+        board = new ChessBoard();
         board.resetBoard();
         getPossibleMoves(currentTurn);
         isInCheck(TeamColor.BLACK);
@@ -62,12 +63,12 @@ public class ChessGame {
             return false;
         }
         ChessGame chessGame = (ChessGame) o;
-        return blackInCheck == chessGame.blackInCheck && whiteInCheck == chessGame.whiteInCheck && blackInCheckmate == chessGame.blackInCheckmate && whiteInCheckmate == chessGame.whiteInCheckmate && amChecking == chessGame.amChecking && Objects.equals(board, chessGame.board) && currentTurn == chessGame.currentTurn && Objects.equals(possibleMoves, chessGame.possibleMoves);
+        return Objects.equals(board, chessGame.board) && Objects.equals(currentTurn, chessGame.currentTurn);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(board, currentTurn, blackInCheck, whiteInCheck, blackInCheckmate, whiteInCheckmate, amChecking, possibleMoves);
+        return Objects.hash(board, currentTurn);
     }
 
 
@@ -87,14 +88,14 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        TeamColor teamc = ChessBoard.existingBoard.getPosition(startPosition.x, startPosition.y).occupyingPiece.team;
+        TeamColor teamc = ChessGame.game.getBoard().getPosition(startPosition.x, startPosition.y).occupyingPiece.team;
         isInCheck(teamc);
         getPossibleMoves(teamc);
         System.out.println("Possible moves: " + possibleMoves.size());
 
-        if(ChessBoard.existingBoard.getPosition(startPosition.x, startPosition.y).occupyingPiece != null){
+        if(ChessGame.game.getBoard().getPosition(startPosition.x, startPosition.y).occupyingPiece != null){
 
-            Collection<ChessMove> singularPieceMoves = ChessBoard.existingBoard.getPosition(startPosition.x, startPosition.y).occupyingPiece.pieceMoves(board, startPosition);
+            Collection<ChessMove> singularPieceMoves = ChessGame.game.getBoard().getPosition(startPosition.x, startPosition.y).occupyingPiece.pieceMoves(board, startPosition);
             Collection<ChessMove> filteredMoves = new ArrayList<>();
 
             for(ChessMove mv : singularPieceMoves){
@@ -125,17 +126,17 @@ public class ChessGame {
         }
 
 
-        move.startPos.occupyingPiece = ChessBoard.existingBoard.getPosition(move.startPos.x, move.startPos.y).occupyingPiece;
-        move.endPos.occupyingPiece = ChessBoard.existingBoard.getPosition(move.endPos.x, move.endPos.y).occupyingPiece;
+        move.startPos.occupyingPiece = ChessGame.game.getBoard().getPosition(move.startPos.x, move.startPos.y).occupyingPiece;
+        move.endPos.occupyingPiece = ChessGame.game.getBoard().getPosition(move.endPos.x, move.endPos.y).occupyingPiece;
         if(move.proPiece != null){
-            ChessBoard.existingBoard.getPosition(move.endPos.x, move.endPos.y).occupyingPiece = new ChessPiece(move.startPos.occupyingPiece.getTeamColor(), move.proPiece);
+            ChessGame.game.getBoard().getPosition(move.endPos.x, move.endPos.y).occupyingPiece = new ChessPiece(move.startPos.occupyingPiece.getTeamColor(), move.proPiece);
             board.getPosition(move.endPos.x, move.endPos.y).occupyingPiece = new ChessPiece(move.startPos.occupyingPiece.getTeamColor(), move.proPiece);
         } else {
-            ChessBoard.existingBoard.getPosition(move.endPos.x, move.endPos.y).occupyingPiece = move.startPos.occupyingPiece;
+            ChessGame.game.getBoard().getPosition(move.endPos.x, move.endPos.y).occupyingPiece = move.startPos.occupyingPiece;
             board.getPosition(move.endPos.x, move.endPos.y).occupyingPiece = move.startPos.occupyingPiece;
         }
 
-        ChessBoard.existingBoard.getPosition(move.startPos.x, move.startPos.y).occupyingPiece = null;
+        ChessGame.game.getBoard().getPosition(move.startPos.x, move.startPos.y).occupyingPiece = null;
         board.getPosition(move.startPos.x, move.startPos.y).occupyingPiece = null;
         if(currentTurn == TeamColor.BLACK){ blackInCheck = false; isInCheck(TeamColor.WHITE); }
         if(currentTurn == TeamColor.WHITE){ whiteInCheck = false; isInCheck(TeamColor.BLACK); }
@@ -154,11 +155,11 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        for(ChessPosition pos : ChessBoard.existingBoard.boardPositions){
+        for(ChessPosition pos : ChessGame.game.getBoard().boardPositions){
             if(teamColor == TeamColor.BLACK){
                 if(pos.occupyingPiece != null){
                     if(pos.occupyingPiece.getTeamColor() == TeamColor.WHITE){
-                        for(ChessMove mv : pos.occupyingPiece.pieceMoves(ChessBoard.existingBoard, pos)){
+                        for(ChessMove mv : pos.occupyingPiece.pieceMoves(ChessGame.game.getBoard(), pos)){
                             if(mv.endPos.occupyingPiece != null){
                                 if(mv.endPos.occupyingPiece.pieceType == ChessPiece.PieceType.KING && mv.endPos.occupyingPiece.getTeamColor() == TeamColor.BLACK){
                                     blackInCheck = true;
@@ -171,7 +172,7 @@ public class ChessGame {
             } else {
                 if(pos.occupyingPiece != null){
                     if(pos.occupyingPiece.getTeamColor() == TeamColor.BLACK){
-                        for(ChessMove mv : pos.occupyingPiece.pieceMoves(ChessBoard.existingBoard, pos)){
+                        for(ChessMove mv : pos.occupyingPiece.pieceMoves(ChessGame.game.getBoard(), pos)){
                             if(mv.endPos.occupyingPiece != null){
                                 if(mv.endPos.occupyingPiece.pieceType == ChessPiece.PieceType.KING && mv.endPos.occupyingPiece.getTeamColor() == TeamColor.WHITE){
                                     whiteInCheck = true;
@@ -227,10 +228,10 @@ public class ChessGame {
 
     public void getPossibleMoves(TeamColor clr){
         possibleMoves.clear();
-        for(ChessPosition pos : ChessBoard.existingBoard.boardPositions){
+        for(ChessPosition pos : ChessGame.game.getBoard().boardPositions){
             if(pos.occupyingPiece != null){
                 if(pos.occupyingPiece.getTeamColor() == clr){
-                    Collection<ChessMove> mvs = pos.occupyingPiece.pieceMoves(ChessBoard.existingBoard, pos);
+                    Collection<ChessMove> mvs = pos.occupyingPiece.pieceMoves(ChessGame.game.getBoard(), pos);
                     possibleMoves.addAll(mvs);
                 }
             }
@@ -245,13 +246,13 @@ public class ChessGame {
                 ChessPosition savedEnd = new ChessPosition(mv.endPos.x, mv.endPos.y);
                 savedEnd.occupyingPiece = mv.endPos.occupyingPiece;
 
-                ChessGame.game.makeMoveAStepAhead(ChessBoard.existingBoard, mv);
-                if(ChessGame.game.isInCheckAStepAhead(ChessBoard.existingBoard, clr)){
+                ChessGame.game.makeMoveAStepAhead(ChessGame.game.getBoard(), mv);
+                if(ChessGame.game.isInCheckAStepAhead(ChessGame.game.getBoard(), clr)){
                     movesToRemove.add(mv);
                 }
 
-                ChessBoard.existingBoard.getPosition(mv.startPos.x, mv.startPos.y).occupyingPiece = savedStart.occupyingPiece;
-                ChessBoard.existingBoard.getPosition(mv.endPos.x, mv.endPos.y).occupyingPiece = savedEnd.occupyingPiece;
+                ChessGame.game.getBoard().getPosition(mv.startPos.x, mv.startPos.y).occupyingPiece = savedStart.occupyingPiece;
+                ChessGame.game.getBoard().getPosition(mv.endPos.x, mv.endPos.y).occupyingPiece = savedEnd.occupyingPiece;
             }
             possibleMoves.removeAll(movesToRemove);
             ChessGame.game.amChecking = false;
@@ -302,7 +303,7 @@ public class ChessGame {
      */
     public void setBoard(ChessBoard board) {
         this.board = board;
-        ChessBoard.existingBoard = board;
+        //ChessGame.game.getBoard() = board;
         blackInCheck = false;
         blackInCheckmate = false;
         whiteInCheck = false;
@@ -319,6 +320,6 @@ public class ChessGame {
      * @return the chessboard
      */
     public ChessBoard getBoard() {
-        return ChessBoard.existingBoard;
+        return board;
     }
 }
