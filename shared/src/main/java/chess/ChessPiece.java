@@ -107,16 +107,25 @@ public class ChessPiece {
             }
         }
 
-        if((team == ChessGame.TeamColor.WHITE && ChessGame.game.whiteInCheck) || (team == ChessGame.TeamColor.BLACK && ChessGame.game.blackInCheck)){
+        if(!ChessGame.game.amChecking){
+            ChessGame.game.amChecking = true;
             Collection<ChessMove> movesToRemove = new ArrayList<>();
             for(ChessMove mv : validatedMoves){
-                ChessBoard nextBoard = new ChessBoard(false);
-                ChessGame.game.makeMoveAStepAhead(nextBoard, mv);
-                if(ChessGame.game.isInCheckAStepAhead(nextBoard, team)){
+                ChessPosition savedStart = new ChessPosition(mv.startPos.x, mv.startPos.y);
+                savedStart.occupyingPiece = mv.startPos.occupyingPiece;
+                ChessPosition savedEnd = new ChessPosition(mv.endPos.x, mv.endPos.y);
+                savedEnd.occupyingPiece = mv.endPos.occupyingPiece;
+
+                ChessGame.game.makeMoveAStepAhead(ChessBoard.existingBoard, mv);
+                if(ChessGame.game.isInCheckAStepAhead(ChessBoard.existingBoard, team)){
                     movesToRemove.add(mv);
                 }
+
+                ChessBoard.existingBoard.getPosition(mv.startPos.x, mv.startPos.y).occupyingPiece = savedStart.occupyingPiece;
+                ChessBoard.existingBoard.getPosition(mv.endPos.x, mv.endPos.y).occupyingPiece = savedEnd.occupyingPiece;
             }
             validatedMoves.removeAll(movesToRemove);
+            ChessGame.game.amChecking = false;
         }
         return validatedMoves;
     }

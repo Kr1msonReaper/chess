@@ -18,6 +18,7 @@ public class ChessGame {
     public boolean whiteInCheck = false;
     public boolean blackInCheckmate = false;
     public boolean whiteInCheckmate = false;
+    public boolean amChecking = false;
     public Collection<ChessMove> possibleMoves = new ArrayList<>();
 
     public ChessGame() {
@@ -85,6 +86,11 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
+        TeamColor teamc = ChessBoard.existingBoard.getPosition(startPosition.x, startPosition.y).occupyingPiece.team;
+        isInCheck(teamc);
+        getPossibleMoves(teamc);
+        System.out.println("Possible moves: " + possibleMoves.size());
+
         if(ChessBoard.existingBoard.getPosition(startPosition.x, startPosition.y).occupyingPiece != null){
             return ChessBoard.existingBoard.getPosition(startPosition.x, startPosition.y).occupyingPiece.pieceMoves(board, startPosition);
         } else {
@@ -99,6 +105,9 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        isInCheck(currentTurn);
+        getPossibleMoves(currentTurn);
+        System.out.println("Possible moves: " + possibleMoves.size());
 
         if(!possibleMoves.contains(move)){
             throw new InvalidMoveException();
@@ -241,6 +250,10 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
+        isInCheck(teamColor);
+        getPossibleMoves(teamColor);
+        System.out.println("Possible moves: " + possibleMoves.size());
+
         if((teamColor == TeamColor.WHITE && whiteInCheck) || (teamColor == TeamColor.BLACK && blackInCheck)){ return false;}
 
         if(possibleMoves.size() == 0){
