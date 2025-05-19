@@ -2,6 +2,7 @@ package server;
 
 import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryGameDAO;
+import dataaccess.MemoryUserDAO;
 import spark.*;
 import spark.Spark.*;
 

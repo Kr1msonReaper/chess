@@ -18,8 +18,15 @@ public class MemoryGameDAO implements GameDAO{
         gameData.add(newData);
         return newID;
     }
-    public Collection<ChessGame> getGames(AuthData data){
+    public Collection<GameData> getGames(AuthData data){
+        Collection<GameData> games = new ArrayList<>();
 
+        for(GameData game : gameData){
+            if(game.whiteUsername() == data.username() || game.blackUsername() == data.username()){
+                games.add(game);
+            }
+        }
+        return games;
     }
     public GameData getGame(int gameID){
         for (GameData game : gameData){
@@ -33,13 +40,14 @@ public class MemoryGameDAO implements GameDAO{
         GameData game = getGame(gameID);
 
         if(color == ChessGame.TeamColor.WHITE){
-            game.whiteUsername()
+            game = game.assignWhite(data.username());
         } else {
-
+            game = game.assignBlack(data.username());
         }
+        return 200;
     }
     public void deleteAll(){
-
+        gameData.clear();
     }
 
 }
