@@ -140,7 +140,7 @@ public class Server {
 
                 JoinGameRequest reqObj = serializer.fromJson(req.body(), JoinGameRequest.class);
 
-                if(gameDAO.getGame(reqObj.gameID) != null){
+                if(gameDAO.getGame(reqObj.gameID) == null){
                     res.type("application/json");
                     res.status(400);
                     return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "bad request"));
