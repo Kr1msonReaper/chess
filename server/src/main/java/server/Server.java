@@ -7,6 +7,7 @@ import dataaccess.MemoryUserDAO;
 import model.AuthData;
 import service.CreateGameRequest;
 import service.CreateGameResult;
+import service.JoinGameRequest;
 import service.ListGamesResult;
 import model.UserData;
 import spark.*;
@@ -131,8 +132,25 @@ public class Server {
         });
 
         Spark.put("/game", (req, res) -> {
+            // Join game!
+            System.out.println("Got a join game request!");
 
-            System.out.println("Got a message!");
+            String token = req.headers("authorization");
+            if(authDAO.getAuth(token) != null){
+
+                JoinGameRequest reqObj = serializer.fromJson(req.body(), JoinGameRequest.class);
+
+                if(gameDAO.getGame(reqObj.gameID) != null){
+                    res.type("application/json");
+                    res.status(400);
+                    return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "bad request"));
+                }
+
+            } else {
+                res.type("application/json");
+                res.status(401);
+                return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "unauthorized"));
+            }
 
             res.type("application/json");
             return String.format("{\"message\": %d}", 200);
