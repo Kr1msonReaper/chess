@@ -14,6 +14,15 @@ public class MemoryUserDAO {
         return 200;
     }
 
+    public boolean userExists(UserData data){
+        for(UserData user : users){
+            if(user.username().equals(data.username()) || user.email().equals(data.email())){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public UserData getUser(String username){
         for(UserData user : users){
             if(user.username() == username){
