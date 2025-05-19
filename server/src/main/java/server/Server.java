@@ -30,11 +30,35 @@ public class Server {
         Spark.post("/session", (req, res) -> {
             //Login
             System.out.println("Got a login request!");
+            UserData loginReq = new UserData("", "", "");
+            try {
+                loginReq = serializer.fromJson(req.body(), UserData.class);
+                if(loginReq.username() == null || loginReq.password() == null){int i = 37 / 0;}
+            } catch(Exception e){
+                res.type("application/json");
+                res.status(400);
+                return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "bad request"));
+            }
+            if(!userDAO.userExists(loginReq)){
+                res.type("application/json");
+                res.status(401);
+                return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "user doesn't exist"));
+            }
 
+            UserData existingUser = userDAO.getUser(loginReq.username());
 
+            if(!existingUser.password().equals(loginReq.password())){
+                res.type("application/json");
+                res.status(401);
+                return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "unauthorized"));
+            }
+
+            AuthData authInfo = authDAO.createAuth(existingUser);
+
+            var json = serializer.toJson(authInfo);
 
             res.type("application/json");
-            return String.format("{\"message\": %d}", 200);
+            return json;
         });
 
         Spark.delete("/session", (req, res) -> {
@@ -75,7 +99,7 @@ public class Server {
             UserData registerReq = new UserData("", "", "");
             try {
                 registerReq = serializer.fromJson(req.body(), UserData.class);
-                if(registerReq.username() == null || registerReq.password() == null || registerReq.email() == null){int i = 37 / 0;}
+                if(registerReq.username() == null || registerReq.password() == null){int i = 37 / 0;}
             } catch(Exception e){
                 res.type("application/json");
                 res.status(400);
