@@ -11,22 +11,15 @@ public class MemoryGameDAO implements GameDAO{
 
     public Collection<GameData> gameData = new ArrayList<>();
 
-    public int createGame(AuthData data, String gameName){
+    public int createGame(String gameName){
         int newID = gameData.size() + 1;
         ChessGame newGame = new ChessGame();
         GameData newData = new GameData(newID, "", "", gameName, newGame);
         gameData.add(newData);
         return newID;
     }
-    public Collection<GameData> getGames(AuthData data){
-        Collection<GameData> games = new ArrayList<>();
-
-        for(GameData game : gameData){
-            if(game.whiteUsername() == data.username() || game.blackUsername() == data.username()){
-                games.add(game);
-            }
-        }
-        return games;
+    public Collection<GameData> getGames(){
+        return gameData;
     }
     public GameData getGame(int gameID){
         for (GameData game : gameData){

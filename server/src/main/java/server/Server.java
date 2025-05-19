@@ -5,6 +5,9 @@ import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryGameDAO;
 import dataaccess.MemoryUserDAO;
 import model.AuthData;
+import service.CreateGameRequest;
+import service.CreateGameResult;
+import service.ListGamesResult;
 import model.UserData;
 import spark.*;
 
@@ -62,27 +65,69 @@ public class Server {
         });
 
         Spark.delete("/session", (req, res) -> {
-
-            System.out.println("Got a message!");
-
-            res.type("application/json");
-            return String.format("{\"message\": %d}", 200);
+            //Logout
+            System.out.println("Logout request received!");
+            String token = req.headers("authorization");
+            if(authDAO.getAuth(token) != null){
+                authDAO.removeAuth(token);
+                res.type("application/json");
+                return String.format("{\"message\": %d}", 200);
+            } else {
+                res.type("application/json");
+                res.status(401);
+                return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "unauthorized"));
+            }
         });
 
         Spark.get("/game", (req, res) -> {
+            //List games
+            System.out.println("Got a list games call!");
 
-            System.out.println("Got a message!");
+            String token = req.headers("authorization");
+            if(authDAO.getAuth(token) != null){
 
-            res.type("application/json");
-            return String.format("{\"message\": %d}", 200);
+                ListGamesResult payload = new ListGamesResult();
+                payload.games = gameDAO.getGames();
+
+                var json = serializer.toJson(payload);
+
+                res.type("application/json");
+                return json;
+            } else {
+                res.type("application/json");
+                res.status(401);
+                return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "unauthorized"));
+            }
         });
 
         Spark.post("/game", (req, res) -> {
+            //Create a game!
+            System.out.println("Got a create game request!");
 
-            System.out.println("Got a message!");
+            String token = req.headers("authorization");
+            if(authDAO.getAuth(token) != null){
 
-            res.type("application/json");
-            return String.format("{\"message\": %d}", 200);
+                CreateGameRequest reqObj = serializer.fromJson(req.body(), CreateGameRequest.class);
+
+                if(reqObj.gameName == null || reqObj.gameName.equals("")){
+                    res.type("application/json");
+                    res.status(400);
+                    return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "bad request"));
+                }
+
+                int gameID = gameDAO.createGame(reqObj.gameName);
+                CreateGameResult payload = new CreateGameResult();
+                payload.gameID = gameID;
+
+                var json = serializer.toJson(payload);
+
+                res.type("application/json");
+                return json;
+            } else {
+                res.type("application/json");
+                res.status(401);
+                return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "unauthorized"));
+            }
         });
 
         Spark.put("/game", (req, res) -> {

@@ -18,13 +18,23 @@ public class MemoryAuthDAO implements AuthDAO{
         return newData;
     }
 
-    public AuthData getAuth(UserData data){
+    public AuthData getAuth(String token){
         for(AuthData x : authTokens){
-            if(x.username() == data.username()){
+            if(x.authToken().equals(token)){
                 return x;
             }
         }
         return null;
+    }
+
+    public void removeAuth(String token){
+        AuthData matchingToken = new AuthData("", "");
+        for(AuthData x : authTokens){
+            if(x.authToken().equals(token)){
+                matchingToken = x;
+            }
+        }
+        authTokens.remove(matchingToken);
     }
 
     public void removeAll(){
