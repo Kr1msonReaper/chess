@@ -5,6 +5,7 @@ import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryGameDAO;
 import dataaccess.MemoryUserDAO;
 import model.AuthData;
+import model.GameData;
 import service.CreateGameRequest;
 import service.CreateGameResult;
 import service.JoinGameRequest;
@@ -136,14 +137,39 @@ public class Server {
             System.out.println("Got a join game request!");
 
             String token = req.headers("authorization");
+
             if(authDAO.getAuth(token) != null){
 
                 JoinGameRequest reqObj = serializer.fromJson(req.body(), JoinGameRequest.class);
+                String username = authDAO.getAuth(token).username();
+                GameData joinedGame = gameDAO.getGame(reqObj.gameID);
 
-                if(gameDAO.getGame(reqObj.gameID) == null){
+                if(joinedGame == null || reqObj.playerColor == null || !(reqObj.playerColor.equals("BLACK") || reqObj.playerColor.equals("WHITE"))){
                     res.type("application/json");
                     res.status(400);
                     return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "bad request"));
+                }
+
+                if(reqObj.playerColor.equals("WHITE")){
+                    if(!joinedGame.whiteUsername().equals("")){
+                        res.type("application/json");
+                        res.status(403);
+                        return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "already taken"));
+                    }
+                }
+
+                if(reqObj.playerColor.equals("BLACK")){
+                    if(!joinedGame.blackUsername().equals("")){
+                        res.type("application/json");
+                        res.status(403);
+                        return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "already taken"));
+                    }
+                }
+
+                if(reqObj.playerColor == "WHITE"){
+                    joinedGame.assignWhite(username);
+                } else {
+                    joinedGame.assignBlack(username);
                 }
 
             } else {
@@ -153,6 +179,7 @@ public class Server {
             }
 
             res.type("application/json");
+            res.status(200);
             return String.format("{\"message\": %d}", 200);
         });
 
