@@ -29,16 +29,6 @@ public class MemoryGameDAO implements GameDAO{
         }
         return null;
     }
-    public int joinGame(AuthData data, ChessGame.TeamColor color, int gameID){
-        GameData game = getGame(gameID);
-
-        if(color == ChessGame.TeamColor.WHITE){
-            game = game.assignWhite(data.username());
-        } else {
-            game = game.assignBlack(data.username());
-        }
-        return 200;
-    }
 
     public void replaceGameData(GameData x, GameData newGameInfo){
         gameData.remove(x);
