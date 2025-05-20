@@ -37,7 +37,6 @@ public class Server {
 
         Spark.post("/session", (req, res) -> {
             //Login
-            System.out.println("Got a login request!");
             UserData loginReq = new UserData("", "", "");
             try {
                 loginReq = serializer.fromJson(req.body(), UserData.class);
@@ -71,7 +70,6 @@ public class Server {
 
         Spark.delete("/session", (req, res) -> {
             //Logout
-            System.out.println("Logout request received!");
             String token = req.headers("authorization");
             if(authDAO.getAuth(token) != null){
                 authDAO.removeAuth(token);
@@ -86,8 +84,6 @@ public class Server {
 
         Spark.get("/game", (req, res) -> {
             //List games
-            System.out.println("Got a list games call!");
-
             String token = req.headers("authorization");
             if(authDAO.getAuth(token) != null){
 
@@ -107,8 +103,6 @@ public class Server {
 
         Spark.post("/game", (req, res) -> {
             //Create a game!
-            System.out.println("Got a create game request!");
-
             String token = req.headers("authorization");
             if(authDAO.getAuth(token) != null){
 
@@ -137,8 +131,6 @@ public class Server {
 
         Spark.put("/game", (req, res) -> {
             // Join game!
-            System.out.println("Got a join game request!");
-
             String token = req.headers("authorization");
 
             if(authDAO.getAuth(token) != null){
@@ -207,7 +199,6 @@ public class Server {
 
         Spark.post("/user", (req, res) -> {
             //Register
-            System.out.println("Got a register request!");
             UserData registerReq = new UserData("", "", "");
             try {
                 registerReq = serializer.fromJson(req.body(), UserData.class);
@@ -233,9 +224,6 @@ public class Server {
         });
 
         Spark.delete("/db", (req, res) -> {
-
-            System.out.println("Called delete db!");
-
             try{
                 userDAO.removeAll();
                 authDAO.removeAll();

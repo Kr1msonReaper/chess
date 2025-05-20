@@ -85,11 +85,6 @@ public class ChessBoard {
             String otherObj = obj.toString();
             String stringRepresentation = toString();
 
-            System.out.println("Real class:\n");
-            System.out.println(stringRepresentation + "\n ---------------------------");
-            System.out.println("Compared object:\n");
-            System.out.println(otherObj + "\n ---------------------------");
-
             return (stringRepresentation.equals(otherObj));
         } catch(Exception e){
             return false;
