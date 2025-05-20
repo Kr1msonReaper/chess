@@ -14,6 +14,8 @@ import service.ListGamesResult;
 import model.UserData;
 import spark.*;
 
+import java.util.Objects;
+
 public class Server {
 
     public static MemoryAuthDAO authDAO;
@@ -152,7 +154,7 @@ public class Server {
                 }
 
                 if(reqObj.playerColor.equals("WHITE")){
-                    if(!joinedGame.whiteUsername().equals("")){
+                    if(!Objects.equals(joinedGame.whiteUsername(), "") && !Objects.equals(joinedGame.whiteUsername(), null)){
                         res.type("application/json");
                         res.status(403);
                         return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "already taken"));
@@ -160,7 +162,7 @@ public class Server {
                 }
 
                 if(reqObj.playerColor.equals("BLACK")){
-                    if(!joinedGame.blackUsername().equals("")){
+                    if(!Objects.equals(joinedGame.blackUsername(), "") && !Objects.equals(joinedGame.blackUsername(), null)){
                         res.type("application/json");
                         res.status(403);
                         return String.format("{\"message\": \"%s\"}", String.format("Error: (%s)", "already taken"));
