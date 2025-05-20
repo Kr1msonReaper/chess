@@ -26,8 +26,8 @@ public class ChessPosition {
         return x;
     }
 
-    public void setPiece(ChessPiece _piece){
-        occupyingPiece = _piece;
+    public void setPiece(ChessPiece piece){
+        occupyingPiece = piece;
     }
 
     public ChessPiece getPiece(){
