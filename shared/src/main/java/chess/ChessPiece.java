@@ -61,39 +61,49 @@ public class ChessPiece {
         return pieceType;
     }
 
-    public Collection<ChessMove> validateMoves(Collection<ChessMove> moves){
+    private boolean isOnBoard(ChessPosition pos) {
+        return pos.x >= 1 && pos.x <= 8 && pos.y >= 1 && pos.y <= 8;
+    }
+
+    private boolean isPawnPromotionMove(ChessMove move) {
+        if (pieceType != PieceType.PAWN) return false;
+        if (team == ChessGame.TeamColor.WHITE && move.endPos.x == 8) return true;
+        if (team == ChessGame.TeamColor.BLACK && move.endPos.x == 1) return true;
+        return false;
+    }
+
+    private Collection<ChessMove> generatePromotions(ChessMove move) {
+        List<ChessMove> promotionMoves = new ArrayList<>();
+        for (PieceType promotion : List.of(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)) {
+            promotionMoves.add(new ChessMove(move.startPos, move.endPos, promotion));
+        }
+        return promotionMoves;
+    }
+
+
+    public Collection<ChessMove> validateMoves(Collection<ChessMove> moves) {
         Collection<ChessMove> validatedMoves = new ArrayList<>();
 
         for (ChessMove move : moves) {
-            // Only allow moves to stay on board
-            if ((move.endPos.x >= 1 && move.endPos.x <= 8) &&
-                    (move.endPos.y >= 1 && move.endPos.y <= 8)) {
-
-                // If it's a pawn move reaching the promotion row
-                if (pieceType == PieceType.PAWN) {
-                    if ((team == ChessGame.TeamColor.WHITE && move.endPos.x == 8) ||
-                            (team == ChessGame.TeamColor.BLACK && move.endPos.x == 1)) {
-
-                        // If it's already a promotion move, just accept it
-                        if (move.proPiece != null) {
-                            validatedMoves.add(move);
-                            continue;
-                        }
-
-                        // Otherwise, create 4 promotion moves
-                        for (PieceType promotion : List.of(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)) {
-                            validatedMoves.add(new ChessMove(move.startPos, move.endPos, promotion));
-                        }
-                        continue;
-                    }
-                }
-
-                validatedMoves.add(move); // normal move
+            if (!isOnBoard(move.endPos)) {
+                continue;
             }
+
+            if (isPawnPromotionMove(move)) {
+                if (move.proPiece != null) {
+                    validatedMoves.add(move); // already a promotion
+                } else {
+                    validatedMoves.addAll(generatePromotions(move)); // create all 4 promotion options
+                }
+                continue;
+            }
+
+            validatedMoves.add(move); // normal move
         }
 
         return validatedMoves;
     }
+
 
 
     public Collection<ChessMove> addMoves(ChessBoard board, ChessPosition myPosition, int xDir, int yDir){

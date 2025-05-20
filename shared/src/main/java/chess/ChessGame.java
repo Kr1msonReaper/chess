@@ -153,6 +153,19 @@ public class ChessGame {
         nextBoard.getPosition(move.startPos.x, move.startPos.y).occupyingPiece = null;
     }
 
+    private boolean isThreateningKing(ChessPiece piece, ChessPosition from, TeamColor targetTeam, ChessBoard board) {
+        for (ChessMove move : piece.pieceMoves(board, from)) {
+            ChessPiece destinationPiece = move.endPos.occupyingPiece;
+            if (destinationPiece != null &&
+                    destinationPiece.pieceType == ChessPiece.PieceType.KING &&
+                    destinationPiece.getTeamColor() == targetTeam) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     /**
      * Determines if the given team is in check
      *
@@ -160,78 +173,43 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        for(ChessPosition pos : ChessGame.game.getBoard().boardPositions){
-            if(teamColor == TeamColor.BLACK){
-                if(pos.occupyingPiece != null){
-                    if(pos.occupyingPiece.getTeamColor() == TeamColor.WHITE){
-                        for(ChessMove mv : pos.occupyingPiece.pieceMoves(ChessGame.game.getBoard(), pos)){
-                            if(mv.endPos.occupyingPiece != null){
-                                if(mv.endPos.occupyingPiece.pieceType == ChessPiece.PieceType.KING
-                                        && mv.endPos.occupyingPiece.getTeamColor() == TeamColor.BLACK){
-                                    blackInCheck = true;
-                                    return true;
-                                }
-                            }
-                        }
+        for (ChessPosition pos : ChessGame.game.getBoard().boardPositions) {
+            ChessPiece piece = pos.occupyingPiece;
+            if (piece == null) continue;
+
+            if (piece.getTeamColor() != teamColor) {
+                if (isThreateningKing(piece, pos, teamColor, ChessGame.game.getBoard())) {
+                    if (teamColor == TeamColor.BLACK) {
+                        blackInCheck = true;
+                    } else {
+                        whiteInCheck = true;
                     }
-                }
-            } else {
-                if(pos.occupyingPiece != null){
-                    if(pos.occupyingPiece.getTeamColor() == TeamColor.BLACK){
-                        for(ChessMove mv : pos.occupyingPiece.pieceMoves(ChessGame.game.getBoard(), pos)){
-                            if(mv.endPos.occupyingPiece != null){
-                                if(mv.endPos.occupyingPiece.pieceType == ChessPiece.PieceType.KING
-                                        && mv.endPos.occupyingPiece.getTeamColor() == TeamColor.WHITE){
-                                    whiteInCheck = true;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
+                    return true;
                 }
             }
         }
 
-        if(teamColor == TeamColor.BLACK){
+        if (teamColor == TeamColor.BLACK) {
             blackInCheck = false;
-        } else { whiteInCheck = false; }
+        } else {
+            whiteInCheck = false;
+        }
 
         return false;
     }
 
     public boolean isInCheckAStepAhead(ChessBoard nextBoard, TeamColor teamColor) {
-        for(ChessPosition pos : nextBoard.boardPositions){
-            if(teamColor == TeamColor.BLACK){
-                if(pos.occupyingPiece != null){
-                    if(pos.occupyingPiece.getTeamColor() == TeamColor.WHITE){
-                        for(ChessMove mv : pos.occupyingPiece.pieceMoves(nextBoard, pos)){
-                            if(mv.endPos.occupyingPiece != null){
-                                if(mv.endPos.occupyingPiece.pieceType == ChessPiece.PieceType.KING
-                                        && mv.endPos.occupyingPiece.getTeamColor() == TeamColor.BLACK){
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                if(pos.occupyingPiece != null){
-                    if(pos.x == 5 && pos.y == 4){
-                        int test = 1;
-                    }
-                    if(pos.occupyingPiece.getTeamColor() == TeamColor.BLACK){
-                        for(ChessMove mv : pos.occupyingPiece.pieceMoves(nextBoard, pos)){
-                            if(mv.endPos.occupyingPiece != null){
-                                if(mv.endPos.occupyingPiece.pieceType == ChessPiece.PieceType.KING
-                                        && mv.endPos.occupyingPiece.getTeamColor() == TeamColor.WHITE){
-                                    return true;
-                                }
-                            }
-                        }
-                    }
+        for (ChessPosition pos : nextBoard.boardPositions) {
+            ChessPiece piece = pos.occupyingPiece;
+            if (piece == null) continue;
+
+            if (piece.getTeamColor() != teamColor) {
+                if (isThreateningKing(piece, pos, teamColor, nextBoard)) {
+                    return true;
                 }
             }
         }
+
         return false;
     }
 
