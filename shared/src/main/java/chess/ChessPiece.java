@@ -96,21 +96,6 @@ public class ChessPiece {
     }
 
 
-    private void duplicateCode(Collection<ChessMove> validatedMoves, ChessMove move) {
-        move.proPiece = PieceType.QUEEN;
-        ChessMove move1 = new ChessMove(move);
-        move1.proPiece = PieceType.KNIGHT;
-        ChessMove move2 = new ChessMove(move);
-        move2.proPiece = PieceType.BISHOP;
-        ChessMove move3 = new ChessMove(move);
-        move3.proPiece = PieceType.ROOK;
-        validatedMoves.add(move);
-        validatedMoves.add(move1);
-        validatedMoves.add(move2);
-        validatedMoves.add(move3);
-        return;
-    }
-
     public Collection<ChessMove> addMoves(ChessBoard board, ChessPosition myPosition, int xDir, int yDir){
         Collection<ChessMove> potentialMoves = new ArrayList<>();
 
