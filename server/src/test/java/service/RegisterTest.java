@@ -29,7 +29,7 @@ public class RegisterTest {
     }
 
     @Test
-    public void registerFailure_duplicateUsername() {
+    public void registerFailureDuplicateUsername() {
         UserData user = new UserData("dupuser", "pass", "email@test.com");
         Server.userDAO.createUser(user);
         assertThrows(RuntimeException.class, () -> Server.userDAO.createUser(user));

@@ -32,7 +32,7 @@ public class CreateGameTest {
     }
 
     @Test
-    public void createGameFailure_blankName() {
+    public void createGameFailureBlankName() {
         assertThrows(RuntimeException.class, () -> Server.gameDAO.createGame(""));
     }
 }

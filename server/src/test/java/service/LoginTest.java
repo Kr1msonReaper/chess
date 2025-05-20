@@ -32,7 +32,7 @@ public class LoginTest {
     }
 
     @Test
-    public void loginFailure_wrongPassword() {
+    public void loginFailureWrongPassword() {
         UserData input = new UserData("testuser", "wrongpass", null);
         AuthData auth = Server.authDAO.createAuth(input);
         assertNull(Server.authDAO.getAuth(auth.authToken())); // simulate rejection

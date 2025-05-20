@@ -1,0 +1,47 @@
+package service;
+import model.AuthData;
+import model.UserData;
+import org.junit.jupiter.api.*;
+import server.Server;
+import spark.Spark;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class LogoutTest {
+    private Server server;
+    private String token;
+
+    @BeforeEach
+    public void setup() {
+        server = new Server();
+        server.run(0);
+        Spark.awaitInitialization();
+
+        UserData user = new UserData("logme", "out", "test@test.com");
+        Server.userDAO.createUser(user);
+        AuthData auth = Server.authDAO.createAuth(user);
+        token = auth.authToken();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        server.stop();
+    }
+
+    @Test
+    public void logoutSuccess() {
+        assertNotNull(Server.authDAO.getAuth(token));
+        Server.authDAO.removeAuth(token);
+        assertNull(Server.authDAO.getAuth(token));
+    }
+
+    @Test
+    public void logoutFailureInvalidToken() {
+        String fakeToken = "invalid-token";
+        assertNull(Server.authDAO.getAuth(fakeToken));
+        // Attempting to remove should still be harmless
+        Server.authDAO.removeAuth(fakeToken);
+        assertNull(Server.authDAO.getAuth(fakeToken));
+    }
+}
+

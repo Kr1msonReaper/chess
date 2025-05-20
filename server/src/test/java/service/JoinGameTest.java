@@ -41,14 +41,14 @@ public class JoinGameTest {
     }
 
     @Test
-    public void joinGameFailure_colorTaken() {
+    public void joinGameFailureColorTaken() {
         int gameId = Server.gameDAO.createGame("Rematch");
         GameData game = Server.gameDAO.getGame(gameId);
         Server.gameDAO.replaceGameData(game, game.assignBlack("blacky"));
 
         GameData sameGame = Server.gameDAO.getGame(gameId);
         assertThrows(RuntimeException.class, () -> {
-            if (sameGame.blackUsername() != null) throw new RuntimeException("Color already taken");
+            if (sameGame.blackUsername() != null){ throw new RuntimeException("Color already taken");}
         });
     }
 }
