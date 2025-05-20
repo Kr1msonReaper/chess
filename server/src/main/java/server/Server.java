@@ -1,5 +1,6 @@
 package server;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
 import dataaccess.MemoryAuthDAO;
 import dataaccess.MemoryGameDAO;
@@ -166,11 +167,30 @@ public class Server {
                     }
                 }
 
-                if(reqObj.playerColor == "WHITE"){
-                    joinedGame.assignWhite(username);
+                if(reqObj.playerColor.equals("WHITE")){
+                    GameData newData = joinedGame.assignWhite(username);
+                    gameDAO.replaceGameData(joinedGame, newData);
+                    joinedGame = gameDAO.getGame(reqObj.gameID);
+                } else if(reqObj.playerColor.equals("BLACK")){
+                    GameData newData = joinedGame.assignBlack(username);
+                    gameDAO.replaceGameData(joinedGame, newData);
+                    joinedGame = gameDAO.getGame(reqObj.gameID);
                 } else {
-                    joinedGame.assignBlack(username);
+                    System.out.println("player color was assigned to be something other than WHITE or BLACK");
                 }
+
+                if(joinedGame.whiteUsername().equals("")){
+                    GameData newData = joinedGame.assignWhite(null);
+                    gameDAO.replaceGameData(joinedGame, newData);
+                    joinedGame = gameDAO.getGame(reqObj.gameID);
+                }
+                if(joinedGame.blackUsername().equals("")){
+                    GameData newData = joinedGame.assignBlack(null);
+                    gameDAO.replaceGameData(joinedGame, newData);
+                    joinedGame = gameDAO.getGame(reqObj.gameID);
+                }
+
+
 
             } else {
                 res.type("application/json");

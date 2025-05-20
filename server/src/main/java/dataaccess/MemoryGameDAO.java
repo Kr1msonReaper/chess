@@ -39,6 +39,12 @@ public class MemoryGameDAO implements GameDAO{
         }
         return 200;
     }
+
+    public void replaceGameData(GameData x, GameData newGameInfo){
+        gameData.remove(x);
+        gameData.add(newGameInfo);
+    }
+
     public void deleteAll(){
         gameData.clear();
     }
