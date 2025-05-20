@@ -66,9 +66,9 @@ public class ChessPiece {
     }
 
     private boolean isPawnPromotionMove(ChessMove move) {
-        if (pieceType != PieceType.PAWN) return false;
-        if (team == ChessGame.TeamColor.WHITE && move.endPos.x == 8) return true;
-        if (team == ChessGame.TeamColor.BLACK && move.endPos.x == 1) return true;
+        if (pieceType != PieceType.PAWN) {return false;}
+        if (team == ChessGame.TeamColor.WHITE && move.endPos.x == 8) {return true;}
+        if (team == ChessGame.TeamColor.BLACK && move.endPos.x == 1) {return true;}
         return false;
     }
 

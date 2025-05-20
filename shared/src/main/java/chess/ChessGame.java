@@ -175,7 +175,7 @@ public class ChessGame {
     public boolean isInCheck(TeamColor teamColor) {
         for (ChessPosition pos : ChessGame.game.getBoard().boardPositions) {
             ChessPiece piece = pos.occupyingPiece;
-            if (piece == null) continue;
+            if (piece == null) {continue;}
 
             if (piece.getTeamColor() != teamColor) {
                 if (isThreateningKing(piece, pos, teamColor, ChessGame.game.getBoard())) {
@@ -201,7 +201,7 @@ public class ChessGame {
     public boolean isInCheckAStepAhead(ChessBoard nextBoard, TeamColor teamColor) {
         for (ChessPosition pos : nextBoard.boardPositions) {
             ChessPiece piece = pos.occupyingPiece;
-            if (piece == null) continue;
+            if (piece == null) {continue;}
 
             if (piece.getTeamColor() != teamColor) {
                 if (isThreateningKing(piece, pos, teamColor, nextBoard)) {
