@@ -1,9 +1,7 @@
 package server;
 
 import com.google.gson.Gson;
-import dataaccess.MemoryAuthDAO;
-import dataaccess.MemoryGameDAO;
-import dataaccess.MemoryUserDAO;
+import dataaccess.*;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -21,9 +19,11 @@ public class Server {
 
     private static final Gson GSON = new Gson();
 
-    public int run(int desiredPort) {
+    public int run(int desiredPort) throws DataAccessException {
         Spark.port(desiredPort);
         Spark.staticFiles.location("web");
+
+        DatabaseManager.createDatabase();
 
         authDAO = new MemoryAuthDAO();
         gameDAO = new MemoryGameDAO();
