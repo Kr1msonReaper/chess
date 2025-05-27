@@ -1,4 +1,5 @@
 package service;
+import dataaccess.DataAccessException;
 import model.UserData;
 import org.junit.jupiter.api.*;
 import server.Server;
@@ -10,7 +11,7 @@ public class ClearDatabaseTest {
     private Server server;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws DataAccessException {
         server = new Server();
         server.run(0);
         Spark.awaitInitialization();

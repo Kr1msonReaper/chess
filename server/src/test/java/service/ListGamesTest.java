@@ -1,4 +1,5 @@
 package service;
+import dataaccess.DataAccessException;
 import model.GameData;
 import model.UserData;
 import org.junit.jupiter.api.*;
@@ -13,7 +14,7 @@ public class ListGamesTest {
     private Server server;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws DataAccessException {
         server = new Server();
         server.run(0);
         Spark.awaitInitialization();

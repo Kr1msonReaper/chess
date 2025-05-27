@@ -24,6 +24,31 @@ public class DatabaseManager {
         try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
              var preparedStatement = conn.prepareStatement(statement)) {
             preparedStatement.executeUpdate();
+
+            var createGameData = "CREATE TABLE IF NOT EXISTS gameData (\n" +
+                                 "    id INT AUTO_INCREMENT PRIMARY KEY,\n" +
+                                 "    gameDataJSON TEXT,\n" +
+                                 "    preferences JSON\n" +
+                                 ");";
+            conn.prepareStatement(createGameData);
+
+            var createUserData = "CREATE TABLE IF NOT EXISTS users (\n" +
+                                 "    id INT AUTO_INCREMENT PRIMARY KEY,\n" +
+                                 "    username TEXT,\n" +
+                                 "    password TEXT,\n" +
+                                 "    email TEXT,\n" +
+                                 "    preferences JSON\n" +
+                                 ");";
+            conn.prepareStatement(createUserData);
+
+            var createAuthData = "CREATE TABLE IF NOT EXISTS authTokens (\n" +
+                    "    id INT AUTO_INCREMENT PRIMARY KEY,\n" +
+                    "    authToken TEXT,\n" +
+                    "    username TEXT,\n" +
+                    "    preferences JSON\n" +
+                    ");";
+            conn.prepareStatement(createAuthData);
+
         } catch (SQLException ex) {
             throw new DataAccessException("failed to create database", ex);
         }

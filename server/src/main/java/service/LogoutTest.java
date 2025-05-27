@@ -1,4 +1,5 @@
 package service;
+import dataaccess.DataAccessException;
 import model.AuthData;
 import model.UserData;
 import org.junit.jupiter.api.*;
@@ -12,7 +13,7 @@ public class LogoutTest {
     private String token;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws DataAccessException {
         server = new Server();
         server.run(0);
         Spark.awaitInitialization();
