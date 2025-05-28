@@ -1,5 +1,5 @@
 package dataaccess;
-
+import com.google.gson.Gson;
 import model.AuthData;
 import model.UserData;
 
@@ -10,11 +10,13 @@ import java.util.UUID;
 public class SQLAuthDAO implements AuthDAO{
 
     public Collection<AuthData> authTokens = new ArrayList<>();
+    private static final Gson GSON = new Gson();
 
-    public AuthData createAuth(UserData data){
+    public AuthData createAuth(UserData data) throws DataAccessException {
         String newToken = UUID.randomUUID().toString();
         AuthData newData = new AuthData(newToken, data.username());
         authTokens.add(newData);
+        DatabaseManager.executeSQL("INSERT INTO authTokens (authData)", GSON.toJson(newData));
         return newData;
     }
 

@@ -1,6 +1,8 @@
 package dataaccess;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class DatabaseManager {
@@ -25,32 +27,61 @@ public class DatabaseManager {
              var preparedStatement = conn.prepareStatement(statement)) {
             preparedStatement.executeUpdate();
 
+            var selectDB = "USE " + databaseName;
+            conn.prepareStatement(selectDB).executeUpdate();
+
             var createGameData = "CREATE TABLE IF NOT EXISTS gameData (\n" +
                                  "    id INT AUTO_INCREMENT PRIMARY KEY,\n" +
-                                 "    gameDataJSON TEXT,\n" +
-                                 "    preferences JSON\n" +
+                                 "    gameDataJSON JSON,\n" +
                                  ");";
-            conn.prepareStatement(createGameData);
+            conn.prepareStatement(createGameData).executeUpdate();
 
             var createUserData = "CREATE TABLE IF NOT EXISTS users (\n" +
                                  "    id INT AUTO_INCREMENT PRIMARY KEY,\n" +
-                                 "    username TEXT,\n" +
-                                 "    password TEXT,\n" +
-                                 "    email TEXT,\n" +
-                                 "    preferences JSON\n" +
+                                 "    userData JSON\n" +
                                  ");";
-            conn.prepareStatement(createUserData);
+            conn.prepareStatement(createUserData).executeUpdate();
 
             var createAuthData = "CREATE TABLE IF NOT EXISTS authTokens (\n" +
                     "    id INT AUTO_INCREMENT PRIMARY KEY,\n" +
-                    "    authToken TEXT,\n" +
-                    "    username TEXT,\n" +
-                    "    preferences JSON\n" +
+                    "    authData JSON\n" +
                     ");";
-            conn.prepareStatement(createAuthData);
+            conn.prepareStatement(createAuthData).executeUpdate();
 
         } catch (SQLException ex) {
             throw new DataAccessException("failed to create database", ex);
+        }
+    }
+
+    static public void executeSQL(String command) throws DataAccessException{
+        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword)){
+            conn.prepareStatement("USE " + databaseName).executeUpdate();
+            conn.prepareStatement(command).executeUpdate();
+        } catch (SQLException e){
+            System.out.println(e);
+        }
+    }
+
+    static public void executeSQL(String command, String dump) throws DataAccessException{
+        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword)){
+            conn.prepareStatement("USE " + databaseName).executeUpdate();
+            conn.prepareStatement(command + " VALUES (" + dump + ");").executeUpdate();
+        } catch (SQLException e){
+            System.out.println(e);
+        }
+    }
+
+    static public List<String> getTableContents(String table, String child) throws DataAccessException{
+        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword)){
+            conn.prepareStatement("USE " + databaseName).executeUpdate();
+            List<String> results = new ArrayList<>();
+            var command = conn.prepareStatement("SELECT * FROM " + table);
+            var rs = command.executeQuery();
+            while(rs.next()){
+                results.add(rs.getString(child));
+            }
+        } catch (SQLException e){
+            System.out.println(e);
         }
     }
 

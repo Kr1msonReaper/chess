@@ -8,9 +8,10 @@ import java.util.Collection;
 public class SQLUserDAO {
     public Collection<UserData> users = new ArrayList<>();
 
-    public int createUser(UserData data){
-
+    public int createUser(UserData data) throws DataAccessException {
+        DatabaseManager.createDatabase();
         users.add(data);
+
         return 200;
     }
 
