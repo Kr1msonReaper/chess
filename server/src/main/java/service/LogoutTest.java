@@ -30,14 +30,14 @@ public class LogoutTest {
     }
 
     @Test
-    public void logoutSuccess() {
+    public void logoutSuccess() throws DataAccessException {
         assertNotNull(Server.authDAO.getAuth(token));
         Server.authDAO.removeAuth(token);
         assertNull(Server.authDAO.getAuth(token));
     }
 
     @Test
-    public void logoutFailureInvalidToken() {
+    public void logoutFailureInvalidToken() throws DataAccessException {
         String fakeToken = "invalid-token";
         assertNull(Server.authDAO.getAuth(fakeToken));
         // Attempting to remove should still be harmless

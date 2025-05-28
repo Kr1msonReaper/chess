@@ -5,6 +5,7 @@ import model.UserData;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 public class SQLAuthDAO implements AuthDAO{
@@ -20,27 +21,31 @@ public class SQLAuthDAO implements AuthDAO{
         return newData;
     }
 
-    public AuthData getAuth(String token){
-        for(AuthData x : authTokens){
-            if(x.authToken().equals(token)){
-                return x;
+    public AuthData getAuth(String token) throws DataAccessException {
+        List<String> jsonDumps = new ArrayList<>();
+        List<AuthData> converted = new ArrayList<>();
+
+        jsonDumps = DatabaseManager.getTableContents("authTokens", "authData");
+
+        for(String dump : jsonDumps){
+            converted.add(GSON.fromJson(dump, AuthData.class));
+        }
+
+        for(AuthData data : converted){
+            if(data.authToken().equals(token)){
+                return data;
             }
         }
+
         return null;
     }
 
-    public void removeAuth(String token){
-        AuthData matchingToken = new AuthData("", "");
-        for(AuthData x : authTokens){
-            if(x.authToken().equals(token)){
-                matchingToken = x;
-            }
-        }
-        authTokens.remove(matchingToken);
+    public void removeAuth(String token) throws DataAccessException {
+        DatabaseManager.executeSQL("DELETE FROM authTokens WHERE authData = " + GSON.toJson(getAuth(token)));
     }
 
-    public void removeAll(){
-        authTokens.clear();
+    public void removeAll() throws DataAccessException {
+        DatabaseManager.executeSQL("DELETE FROM authTokens");
     }
 
 }

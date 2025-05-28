@@ -2,6 +2,7 @@ package dataaccess;
 
 import model.AuthData;
 import model.UserData;
+import server.Server;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,10 +12,11 @@ public class MemoryAuthDAO implements AuthDAO{
 
     public Collection<AuthData> authTokens = new ArrayList<>();
 
-    public AuthData createAuth(UserData data){
+    public AuthData createAuth(UserData data) throws DataAccessException {
         String newToken = UUID.randomUUID().toString();
         AuthData newData = new AuthData(newToken, data.username());
         authTokens.add(newData);
+        Server.sqlAuthDAO.createAuth(data);
         return newData;
     }
 
@@ -27,7 +29,7 @@ public class MemoryAuthDAO implements AuthDAO{
         return null;
     }
 
-    public void removeAuth(String token){
+    public void removeAuth(String token) throws DataAccessException {
         AuthData matchingToken = new AuthData("", "");
         for(AuthData x : authTokens){
             if(x.authToken().equals(token)){
@@ -35,10 +37,12 @@ public class MemoryAuthDAO implements AuthDAO{
             }
         }
         authTokens.remove(matchingToken);
+        Server.sqlAuthDAO.removeAuth(token);
     }
 
-    public void removeAll(){
+    public void removeAll() throws DataAccessException {
         authTokens.clear();
+        Server.sqlAuthDAO.removeAll();
     }
 
 }

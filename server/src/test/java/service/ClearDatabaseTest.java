@@ -27,7 +27,7 @@ public class ClearDatabaseTest {
     }
 
     @Test
-    public void clearDbSuccess() {
+    public void clearDbSuccess() throws DataAccessException {
         Server.userDAO.removeAll();
         Server.authDAO.removeAll();
         Server.gameDAO.deleteAll();

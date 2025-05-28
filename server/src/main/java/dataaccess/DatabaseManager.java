@@ -80,9 +80,11 @@ public class DatabaseManager {
             while(rs.next()){
                 results.add(rs.getString(child));
             }
+            return results;
         } catch (SQLException e){
             System.out.println(e);
         }
+        return null;
     }
 
     /**

@@ -16,6 +16,9 @@ public class Server {
     public static MemoryAuthDAO authDAO;
     public static MemoryGameDAO gameDAO;
     public static MemoryUserDAO userDAO;
+    public static SQLAuthDAO sqlAuthDAO;
+    public static SQLGameDAO sqlGameDAO;
+    public static SQLUserDAO sqlUserDAO;
 
     private static final Gson GSON = new Gson();
 
@@ -28,6 +31,9 @@ public class Server {
         authDAO = new MemoryAuthDAO();
         gameDAO = new MemoryGameDAO();
         userDAO = new MemoryUserDAO();
+        sqlAuthDAO = new SQLAuthDAO();
+        sqlGameDAO = new SQLGameDAO();
+        sqlUserDAO = new SQLUserDAO();
 
         Spark.post("/session", this::login);
         Spark.delete("/session", this::logout);
@@ -46,7 +52,7 @@ public class Server {
         Spark.awaitStop();
     }
 
-    private Object login(Request req, Response res) {
+    private Object login(Request req, Response res) throws DataAccessException {
         UserData loginReq;
         try {
             loginReq = GSON.fromJson(req.body(), UserData.class);
@@ -69,7 +75,7 @@ public class Server {
         return GSON.toJson(authInfo);
     }
 
-    private Object logout(Request req, Response res) {
+    private Object logout(Request req, Response res) throws DataAccessException {
         String token = req.headers("authorization");
         if (authDAO.getAuth(token) != null) {
             authDAO.removeAuth(token);
@@ -78,7 +84,7 @@ public class Server {
         return error(res, 401, "unauthorized");
     }
 
-    private Object register(Request req, Response res) {
+    private Object register(Request req, Response res) throws DataAccessException {
         UserData registerReq;
         try {
             registerReq = GSON.fromJson(req.body(), UserData.class);

@@ -25,7 +25,7 @@ public class LoginTest {
     }
 
     @Test
-    public void loginSuccess() {
+    public void loginSuccess() throws DataAccessException {
         UserData input = new UserData("testuser", "password123", null);
         AuthData auth = Server.authDAO.createAuth(input);
         assertNotNull(auth);
@@ -33,7 +33,7 @@ public class LoginTest {
     }
 
     @Test
-    public void loginFailureWrongPassword() {
+    public void loginFailureWrongPassword() throws DataAccessException {
         UserData input = new UserData("testuser", "wrongpass", null);
         AuthData auth = Server.authDAO.createAuth(input);
         assertNull(Server.authDAO.getAuth(auth.authToken())); // simulate rejection
