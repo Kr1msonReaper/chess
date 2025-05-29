@@ -19,12 +19,22 @@ public class SQLUserDAO implements UserDAO {
         return 200;
     }
 
-    public boolean userExists(UserData data){
-        for(UserData user : users){
-            if(user.username().equals(data.username()) || user.email().equals(data.email())){
+    public boolean userExists(UserData data) throws DataAccessException {
+        Collection<String> jsonDumps = new ArrayList<>();
+        Collection<UserData> converted = new ArrayList<>();
+
+        jsonDumps = DatabaseManager.getTableContents("users", "userData");
+
+        for(String dump : jsonDumps){
+            converted.add(GSON.fromJson(dump, UserData.class));
+        }
+
+        for(UserData dataObj : converted){
+            if(dataObj.equals(data)){
                 return true;
             }
         }
+
         return false;
     }
 

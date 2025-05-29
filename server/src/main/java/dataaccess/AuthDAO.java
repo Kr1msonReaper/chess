@@ -6,5 +6,6 @@ import model.UserData;
 public interface AuthDAO {
     AuthData createAuth(UserData data) throws DataAccessException;
     AuthData getAuth(String token) throws DataAccessException;
+    void removeAuth(String token) throws DataAccessException;
     void removeAll() throws DataAccessException;
 }

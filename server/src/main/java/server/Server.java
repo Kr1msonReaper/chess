@@ -13,12 +13,9 @@ import spark.*;
 
 public class Server {
 
-    public static MemoryAuthDAO authDAO;
-    public static MemoryGameDAO gameDAO;
-    public static MemoryUserDAO userDAO;
-    public static SQLAuthDAO sqlAuthDAO;
-    public static SQLGameDAO sqlGameDAO;
-    public static SQLUserDAO sqlUserDAO;
+    public static AuthDAO authDAO;
+    public static GameDAO gameDAO;
+    public static UserDAO userDAO;
 
     public static final Gson GSON = new Gson();
 
@@ -28,9 +25,9 @@ public class Server {
 
         DatabaseManager.createDatabase();
 
-        AuthDAO authDAO = new SQLAuthDAO();
-        GameDAO gameDAO = new SQLGameDAO();
-        UserDAO userDAO = new SQLUserDAO();
+        authDAO = new SQLAuthDAO();
+        gameDAO = new SQLGameDAO();
+        userDAO = new SQLUserDAO();
 
         Spark.post("/session", this::login);
         Spark.delete("/session", this::logout);
@@ -101,7 +98,7 @@ public class Server {
         return GSON.toJson(authInfo);
     }
 
-    private Object listGames(Request req, Response res) {
+    private Object listGames(Request req, Response res) throws DataAccessException {
         if (!authorized(req, res)){return error(res, 401, "unauthorized");}
 
         ListGamesResult result = new ListGamesResult();
@@ -111,7 +108,7 @@ public class Server {
         return GSON.toJson(result);
     }
 
-    private Object createGame(Request req, Response res) {
+    private Object createGame(Request req, Response res) throws DataAccessException {
         if (!authorized(req, res)){ return error(res, 401, "unauthorized");}
 
         CreateGameRequest gameReq = GSON.fromJson(req.body(), CreateGameRequest.class);
@@ -125,7 +122,7 @@ public class Server {
         return GSON.toJson(result);
     }
 
-    private Object joinGame(Request req, Response res) {
+    private Object joinGame(Request req, Response res) throws DataAccessException {
         if (!authorized(req, res)) {return error(res, 401, "unauthorized");}
 
         JoinGameRequest joinReq = GSON.fromJson(req.body(), JoinGameRequest.class);
@@ -175,7 +172,7 @@ public class Server {
         return success(res, 200);
     }
 
-    private boolean authorized(Request req, Response res) {
+    private boolean authorized(Request req, Response res) throws DataAccessException {
         String token = req.headers("authorization");
         if (token == null || authDAO.getAuth(token) == null) {
             error(res, 401, "unauthorized");

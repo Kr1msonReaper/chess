@@ -53,9 +53,12 @@ public class SQLGameDAO implements GameDAO{
         return null;
     }
 
-    public void replaceGameData(GameData x, GameData newGameInfo){
+    public void replaceGameData(GameData x, GameData newGameInfo) throws DataAccessException {
         gameData.remove(x);
         gameData.add(newGameInfo);
+
+        DatabaseManager.executeSQL("DELETE FROM gameData (gameData)", GSON.toJson(x));
+        DatabaseManager.executeSQL("INSERT INTO gameData (gameData)", GSON.toJson(newGameInfo));
     }
 
     public void deleteAll() throws DataAccessException {

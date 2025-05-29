@@ -23,14 +23,14 @@ public class RegisterTest {
     }
 
     @Test
-    public void registerSuccess() {
+    public void registerSuccess() throws DataAccessException {
         UserData user = new UserData("newuser", "pass", "email@test.com");
         Server.userDAO.createUser(user);
         assertTrue(Server.userDAO.userExists(user));
     }
 
     @Test
-    public void registerFailureDuplicateUsername() {
+    public void registerFailureDuplicateUsername() throws DataAccessException {
         UserData user = new UserData("dupuser", "pass", "email@test.com");
         Server.userDAO.createUser(user);
         assertThrows(RuntimeException.class, () -> Server.userDAO.createUser(user));
