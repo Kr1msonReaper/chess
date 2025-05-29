@@ -16,7 +16,7 @@ public class MemoryAuthDAO implements AuthDAO{
         String newToken = UUID.randomUUID().toString();
         AuthData newData = new AuthData(newToken, data.username());
         authTokens.add(newData);
-        Server.sqlAuthDAO.createAuth(data);
+        //Server.sqlAuthDAO.createAuth(data);
         return newData;
     }
 
@@ -37,12 +37,12 @@ public class MemoryAuthDAO implements AuthDAO{
             }
         }
         authTokens.remove(matchingToken);
-        Server.sqlAuthDAO.removeAuth(token);
+        //Server.sqlAuthDAO.removeAuth(token);
     }
 
     public void removeAll() throws DataAccessException {
         authTokens.clear();
-        Server.sqlAuthDAO.removeAll();
+        //Server.sqlAuthDAO.removeAll();
     }
 
 }

@@ -1,11 +1,12 @@
 package dataaccess;
 
 import model.UserData;
+import org.eclipse.jetty.server.Authentication;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class SQLUserDAO {
+public class SQLUserDAO implements UserDAO {
     public Collection<UserData> users = new ArrayList<>();
 
     public int createUser(UserData data) throws DataAccessException {

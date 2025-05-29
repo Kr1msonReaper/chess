@@ -32,19 +32,19 @@ public class DatabaseManager {
 
             var createGameData = "CREATE TABLE IF NOT EXISTS gameData (\n" +
                                  "    id INT AUTO_INCREMENT PRIMARY KEY,\n" +
-                                 "    gameDataJSON JSON,\n" +
+                                 "    gameData JSON" +
                                  ");";
             conn.prepareStatement(createGameData).executeUpdate();
 
             var createUserData = "CREATE TABLE IF NOT EXISTS users (\n" +
                                  "    id INT AUTO_INCREMENT PRIMARY KEY,\n" +
-                                 "    userData JSON\n" +
+                                 "    userData JSON" +
                                  ");";
             conn.prepareStatement(createUserData).executeUpdate();
 
             var createAuthData = "CREATE TABLE IF NOT EXISTS authTokens (\n" +
                     "    id INT AUTO_INCREMENT PRIMARY KEY,\n" +
-                    "    authData JSON\n" +
+                    "    authData JSON" +
                     ");";
             conn.prepareStatement(createAuthData).executeUpdate();
 

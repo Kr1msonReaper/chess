@@ -3,7 +3,7 @@ package dataaccess;
 import model.UserData;
 
 public interface UserDAO {
-    int createUser(UserData data);
-    UserData getUser(String username);
-    void removeAll();
+    int createUser(UserData data) throws DataAccessException;
+    UserData getUser(String username) throws DataAccessException;
+    void removeAll() throws DataAccessException;
 }

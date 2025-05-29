@@ -20,7 +20,7 @@ public class Server {
     public static SQLGameDAO sqlGameDAO;
     public static SQLUserDAO sqlUserDAO;
 
-    private static final Gson GSON = new Gson();
+    public static final Gson GSON = new Gson();
 
     public int run(int desiredPort) throws DataAccessException {
         Spark.port(desiredPort);
@@ -28,12 +28,9 @@ public class Server {
 
         DatabaseManager.createDatabase();
 
-        authDAO = new MemoryAuthDAO();
-        gameDAO = new MemoryGameDAO();
-        userDAO = new MemoryUserDAO();
-        sqlAuthDAO = new SQLAuthDAO();
-        sqlGameDAO = new SQLGameDAO();
-        sqlUserDAO = new SQLUserDAO();
+        AuthDAO authDAO = new SQLAuthDAO();
+        GameDAO gameDAO = new SQLGameDAO();
+        UserDAO userDAO = new SQLUserDAO();
 
         Spark.post("/session", this::login);
         Spark.delete("/session", this::logout);
