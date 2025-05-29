@@ -1,8 +1,7 @@
 package dataaccess;
 
-import model.GameData;
 import model.UserData;
-import org.eclipse.jetty.server.Authentication;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,66 +9,75 @@ import java.util.Collection;
 import static server.Server.GSON;
 
 public class SQLUserDAO implements UserDAO {
-    public Collection<UserData> users = new ArrayList<>();
 
+    private final Collection<UserData> users = new ArrayList<>();
+
+    @Override
     public int createUser(UserData data) throws DataAccessException {
-        DatabaseManager.createDatabase();
-        users.add(data);
-        DatabaseManager.executeSQL("INSERT INTO users (userData)", GSON.toJson(data));
-        return 200;
+        try {
+            DatabaseManager.createDatabase();
+            users.add(data);
+            var encryptedPass = BCrypt.hashpw(data.password(), BCrypt.gensalt());
+            var alteredData = data.assignPassword(encryptedPass);
+            DatabaseManager.deleteInsertSQL("INSERT INTO users (userData) VALUES (?)", GSON.toJson(alteredData));
+            return 200;
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to create user " + data.username(), e);
+        }
     }
 
+    @Override
     public boolean userExists(UserData data) throws DataAccessException {
-        Collection<String> jsonDumps = new ArrayList<>();
-        Collection<UserData> converted = new ArrayList<>();
-
-        jsonDumps = DatabaseManager.getTableContents("users", "userData");
-
-        for(String dump : jsonDumps){
-            converted.add(GSON.fromJson(dump, UserData.class));
-        }
-
-        for(UserData dataObj : converted){
-            if(dataObj.equals(data)){
-                return true;
+        try {
+            Collection<String> jsonDumps = DatabaseManager.getTableContents("users", "userData");
+            for (String dump : jsonDumps) {
+                UserData dataObj = GSON.fromJson(dump, UserData.class);
+                if (dataObj.username().equals(data.username()) && BCrypt.checkpw(data.password(), dataObj.password())) {
+                    return true;
+                }
             }
+            return false;
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to check if user exists: " + data.username(), e);
         }
-
-        return false;
     }
 
+    @Override
     public Collection<UserData> getUsers() throws DataAccessException {
-        Collection<String> jsonDumps = new ArrayList<>();
-        Collection<UserData> converted = new ArrayList<>();
-
-        jsonDumps = DatabaseManager.getTableContents("users", "userData");
-
-        for(String dump : jsonDumps){
-            converted.add(GSON.fromJson(dump, UserData.class));
-        }
-
-        return converted;
-    }
-
-    public UserData getUser(String username) throws DataAccessException {
-        Collection<String> jsonDumps = new ArrayList<>();
-        Collection<UserData> converted = new ArrayList<>();
-
-        jsonDumps = DatabaseManager.getTableContents("users", "userData");
-
-        for(String dump : jsonDumps){
-            converted.add(GSON.fromJson(dump, UserData.class));
-        }
-
-        for(UserData data : converted){
-            if(data.username().equals(username)){
-                return data;
+        try {
+            Collection<String> jsonDumps = DatabaseManager.getTableContents("users", "userData");
+            Collection<UserData> converted = new ArrayList<>();
+            for (String dump : jsonDumps) {
+                converted.add(GSON.fromJson(dump, UserData.class));
             }
+            return converted;
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to get users", e);
         }
-
-        return null;
     }
+
+    @Override
+    public UserData getUser(String username) throws DataAccessException {
+        try {
+            Collection<String> jsonDumps = DatabaseManager.getTableContents("users", "userData");
+            for (String dump : jsonDumps) {
+                UserData data = GSON.fromJson(dump, UserData.class);
+                if (data.username().equals(username)) {
+                    return data;
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to get user: " + username, e);
+        }
+    }
+
+    @Override
     public void removeAll() throws DataAccessException {
-        DatabaseManager.executeSQL("DELETE FROM users");
+        try {
+            DatabaseManager.executeSQL("DELETE FROM users");
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to remove all users", e);
+        }
     }
 }

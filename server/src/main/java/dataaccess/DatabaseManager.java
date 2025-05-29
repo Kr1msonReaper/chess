@@ -1,5 +1,7 @@
 package dataaccess;
 
+import server.Server;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +65,7 @@ public class DatabaseManager {
 
         } catch (SQLException e){
             System.out.println(e);
+            throw new DataAccessException("failed to create database", e);
         }
     }
 
@@ -75,6 +78,7 @@ public class DatabaseManager {
             statement.executeUpdate();
         } catch (SQLException e){
             System.out.println(e);
+            throw new DataAccessException("failed to create database", e);
         }
     }
 
@@ -87,6 +91,20 @@ public class DatabaseManager {
             statement.executeUpdate();
         } catch (SQLException e){
             System.out.println(e);
+            throw new DataAccessException("failed to create database", e);
+        }
+    }
+
+    static public void deleteIfLikeSQL(String command, String dump) throws DataAccessException{
+        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword)){
+            conn.prepareStatement("USE " + databaseName).executeUpdate();
+            var statement = conn.prepareStatement(command);
+            statement.setString(1, "%" + dump + "%");
+            System.out.println(statement);
+            statement.executeUpdate();
+        } catch (SQLException e){
+            System.out.println(e);
+            throw new DataAccessException("failed to create database", e);
         }
     }
 
@@ -103,8 +121,8 @@ public class DatabaseManager {
             return results;
         } catch (SQLException e){
             System.out.println(e);
+            throw new DataAccessException("failed to create database", e);
         }
-        return null;
     }
 
     /**

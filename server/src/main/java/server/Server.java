@@ -5,6 +5,7 @@ import dataaccess.*;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 import service.CreateGameRequest;
 import service.CreateGameResult;
 import service.JoinGameRequest;
@@ -29,13 +30,13 @@ public class Server {
         gameDAO = new SQLGameDAO();
         userDAO = new SQLUserDAO();
 
-        Spark.post("/session", this::login);
-        Spark.delete("/session", this::logout);
-        Spark.post("/user", this::register);
-        Spark.get("/game", this::listGames);
-        Spark.post("/game", this::createGame);
-        Spark.put("/game", this::joinGame);
-        Spark.delete("/db", this::clearDB);
+        Spark.post("/session", handle(this::login));
+        Spark.delete("/session", handle(this::logout));
+        Spark.post("/user", handle(this::register));
+        Spark.get("/game", handle(this::listGames));
+        Spark.post("/game", handle(this::createGame));
+        Spark.put("/game", handle(this::joinGame));
+        Spark.delete("/db", handle(this::clearDB));
 
         Spark.awaitInitialization();
         return Spark.port();
@@ -46,21 +47,42 @@ public class Server {
         Spark.awaitStop();
     }
 
+    private Route handle(HandlerWithException handler) {
+        return (req, res) -> {
+            try {
+                return handler.handle(req, res);
+            } catch (DataAccessException e) {
+                res.type("application/json");
+                res.status(500);
+                return String.format("{\"message\": \"Error: (%s)\"}", e.getMessage() != null ? e.getMessage() : "Database error");
+            } catch (Exception e) {
+                res.type("application/json");
+                res.status(500);
+                return String.format("{\"message\": \"Error: (%s)\"}", e.getMessage() != null ? e.getMessage() : "Internal server error");
+            }
+        };
+    }
+
+    @FunctionalInterface
+    private interface HandlerWithException {
+        Object handle(Request req, Response res) throws Exception;
+    }
+
     private Object login(Request req, Response res) throws DataAccessException {
         UserData loginReq;
         try {
             loginReq = GSON.fromJson(req.body(), UserData.class);
-            if (isBlank(loginReq.username()) || isBlank(loginReq.password())){
+            if (isBlank(loginReq.username()) || isBlank(loginReq.password())) {
                 throw new Exception();
             }
         } catch (Exception e) {
             return error(res, 400, "bad request");
         }
 
-        if (!userDAO.userExists(loginReq)){return error(res, 401, "user doesn't exist");}
+        if (!userDAO.userExists(loginReq)) return error(res, 401, "user doesn't exist");
 
         UserData existingUser = userDAO.getUser(loginReq.username());
-        if (!existingUser.password().equals(loginReq.password())) {
+        if (!BCrypt.checkpw(loginReq.password(), existingUser.password())) {
             return error(res, 401, "unauthorized");
         }
 
@@ -82,14 +104,14 @@ public class Server {
         UserData registerReq;
         try {
             registerReq = GSON.fromJson(req.body(), UserData.class);
-            if (isBlank(registerReq.username()) || isBlank(registerReq.password())){
+            if (isBlank(registerReq.username()) || isBlank(registerReq.password())) {
                 throw new Exception();
             }
         } catch (Exception e) {
             return error(res, 400, "bad request");
         }
 
-        if (userDAO.userExists(registerReq)){return error(res, 403, "already taken");}
+        if (userDAO.userExists(registerReq)) return error(res, 403, "already taken");
 
         userDAO.createUser(registerReq);
         AuthData authInfo = authDAO.createAuth(registerReq);
@@ -99,7 +121,7 @@ public class Server {
     }
 
     private Object listGames(Request req, Response res) throws DataAccessException {
-        if (!authorized(req, res)){return error(res, 401, "unauthorized");}
+        if (!authorized(req, res)) return error(res, 401, "unauthorized");
 
         ListGamesResult result = new ListGamesResult();
         result.games = gameDAO.getGames();
@@ -109,10 +131,10 @@ public class Server {
     }
 
     private Object createGame(Request req, Response res) throws DataAccessException {
-        if (!authorized(req, res)){ return error(res, 401, "unauthorized");}
+        if (!authorized(req, res)) return error(res, 401, "unauthorized");
 
         CreateGameRequest gameReq = GSON.fromJson(req.body(), CreateGameRequest.class);
-        if (isBlank(gameReq.gameName)) {return error(res, 400, "bad request");}
+        if (isBlank(gameReq.gameName)) return error(res, 400, "bad request");
 
         int gameID = gameDAO.createGame(gameReq.gameName);
         CreateGameResult result = new CreateGameResult();
@@ -123,7 +145,7 @@ public class Server {
     }
 
     private Object joinGame(Request req, Response res) throws DataAccessException {
-        if (!authorized(req, res)) {return error(res, 401, "unauthorized");}
+        if (!authorized(req, res)) return error(res, 401, "unauthorized");
 
         JoinGameRequest joinReq = GSON.fromJson(req.body(), JoinGameRequest.class);
         String token = req.headers("authorization");
@@ -143,13 +165,11 @@ public class Server {
             return error(res, 403, "already taken");
         }
 
-        // Assign player to color
         GameData updatedGame = "WHITE".equals(color)
                 ? game.assignWhite(username)
                 : game.assignBlack(username);
         gameDAO.replaceGameData(game, updatedGame);
 
-        // Reassign null to empty fields (exact behavior match)
         GameData refreshed = gameDAO.getGame(joinReq.gameID);
         if ("".equals(refreshed.whiteUsername())) {
             gameDAO.replaceGameData(refreshed, refreshed.assignWhite(null));
@@ -161,14 +181,10 @@ public class Server {
         return success(res, 200);
     }
 
-    private Object clearDB(Request req, Response res) {
-        try {
-            userDAO.removeAll();
-            authDAO.removeAll();
-            gameDAO.deleteAll();
-        } catch (Exception e) {
-            return error(res, 500, e.getMessage());
-        }
+    private Object clearDB(Request req, Response res) throws DataAccessException {
+        userDAO.removeAll();
+        authDAO.removeAll();
+        gameDAO.deleteAll();
         return success(res, 200);
     }
 

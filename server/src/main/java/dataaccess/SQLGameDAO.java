@@ -1,68 +1,89 @@
 package dataaccess;
 
 import chess.ChessGame;
-import model.AuthData;
 import model.GameData;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import static server.Server.GSON;
 
-public class SQLGameDAO implements GameDAO{
+public class SQLGameDAO implements GameDAO {
 
-    public Collection<GameData> gameData = new ArrayList<>();
+    private final Collection<GameData> gameData = new ArrayList<>();
 
+    @Override
     public int createGame(String gameName) throws DataAccessException {
-        int newID = gameData.size() + 1;
-        ChessGame newGame = new ChessGame();
-        GameData newData = new GameData(newID, "", "", gameName, newGame);
-        gameData.add(newData);
-        DatabaseManager.executeSQL("INSERT INTO gameData (gameDataJSON)", GSON.toJson(newData));
-        return newID;
+        try {
+            int newID = gameData.size() + 1;
+            ChessGame newGame = new ChessGame();
+            GameData newData = new GameData(newID, "", "", gameName, newGame);
+            gameData.add(newData);
+
+            DatabaseManager.deleteInsertSQL("INSERT INTO gameData (gameDataJSON) VALUES (?)", GSON.toJson(newData));
+            return newID;
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to create game", e);
+        }
     }
+
+    @Override
     public Collection<GameData> getGames() throws DataAccessException {
-        Collection<String> jsonDumps = new ArrayList<>();
-        Collection<GameData> converted = new ArrayList<>();
+        try {
+            Collection<String> jsonDumps = DatabaseManager.getTableContents("gameData", "gameDataJSON");
+            Collection<GameData> converted = new ArrayList<>();
 
-        jsonDumps = DatabaseManager.getTableContents("gameData", "gameDataJSON");
-
-        for(String dump : jsonDumps){
-            converted.add(GSON.fromJson(dump, GameData.class));
-        }
-
-        return converted;
-    }
-    public GameData getGame(int gameID) throws DataAccessException {
-        Collection<String> jsonDumps = new ArrayList<>();
-        Collection<GameData> converted = new ArrayList<>();
-
-        jsonDumps = DatabaseManager.getTableContents("gameData", "gameDataJSON");
-
-        for(String dump : jsonDumps){
-            converted.add(GSON.fromJson(dump, GameData.class));
-        }
-
-        for(GameData data : converted){
-            if(data.gameID() == gameID){
-                return data;
+            for (String dump : jsonDumps) {
+                converted.add(GSON.fromJson(dump, GameData.class));
             }
+
+            return converted;
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to get games", e);
         }
-
-        return null;
     }
 
-    public void replaceGameData(GameData x, GameData newGameInfo) throws DataAccessException {
-        gameData.remove(x);
-        gameData.add(newGameInfo);
+    @Override
+    public GameData getGame(int gameID) throws DataAccessException {
+        try {
+            Collection<String> jsonDumps = DatabaseManager.getTableContents("gameData", "gameDataJSON");
 
-        DatabaseManager.deleteInsertSQL("DELETE FROM gameData WHERE gameDataJSON = (?)", GSON.toJson(x));
-        DatabaseManager.deleteInsertSQL("INSERT INTO gameData (gameDataJSON) VALUES (?)", GSON.toJson(newGameInfo));
+            for (String dump : jsonDumps) {
+                GameData data = GSON.fromJson(dump, GameData.class);
+                if (data.gameID() == gameID) {
+                    return data;
+                }
+            }
+
+            return null;
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to get game with ID " + gameID, e);
+        }
     }
 
+    @Override
+    public void replaceGameData(GameData oldGame, GameData newGameInfo) throws DataAccessException {
+        try {
+            if (!gameData.contains(oldGame)) {
+                return;
+            }
+            gameData.remove(oldGame);
+            gameData.add(newGameInfo);
+
+            String likeClause = "\"gameID\": " + oldGame.gameID();
+            DatabaseManager.deleteIfLikeSQL("DELETE FROM gameData WHERE gameDataJSON LIKE ?", likeClause);
+            DatabaseManager.deleteInsertSQL("INSERT INTO gameData (gameDataJSON) VALUES (?)", GSON.toJson(newGameInfo));
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to replace game data for gameID " + oldGame.gameID(), e);
+        }
+    }
+
+    @Override
     public void deleteAll() throws DataAccessException {
-        DatabaseManager.executeSQL("DELETE FROM gameData");
+        try {
+            DatabaseManager.executeSQL("DELETE FROM gameData");
+        } catch (Exception e) {
+            throw new DataAccessException("Failed to delete all games", e);
+        }
     }
-
 }
