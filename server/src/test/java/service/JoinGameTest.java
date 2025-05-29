@@ -33,7 +33,7 @@ public class JoinGameTest {
     }
 
     @Test
-    public void joinGameSuccess() {
+    public void joinGameSuccess() throws DataAccessException {
         int gameId = Server.gameDAO.createGame("Championship");
         GameData game = Server.gameDAO.getGame(gameId);
         GameData updated = game.assignWhite("whitey");
@@ -42,7 +42,7 @@ public class JoinGameTest {
     }
 
     @Test
-    public void joinGameFailureColorTaken() {
+    public void joinGameFailureColorTaken() throws DataAccessException {
         int gameId = Server.gameDAO.createGame("Rematch");
         GameData game = Server.gameDAO.getGame(gameId);
         Server.gameDAO.replaceGameData(game, game.assignBlack("blacky"));

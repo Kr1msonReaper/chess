@@ -33,14 +33,14 @@ public class ListGamesTest {
     }
 
     @Test
-    public void listGamesSuccess() {
+    public void listGamesSuccess() throws DataAccessException {
         List<GameData> games = Server.gameDAO.getGames().stream().toList();
         assertEquals(2, games.size());
         assertTrue(games.stream().anyMatch(g -> g.gameName().equals("Game A")));
     }
 
     @Test
-    public void listGamesFailureUnauthorized() {
+    public void listGamesFailureUnauthorized() throws DataAccessException {
         String token = "invalidToken";
         assertNull(Server.authDAO.getAuth(token));
     }

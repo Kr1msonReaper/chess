@@ -38,6 +38,19 @@ public class SQLUserDAO implements UserDAO {
         return false;
     }
 
+    public Collection<UserData> getUsers() throws DataAccessException {
+        Collection<String> jsonDumps = new ArrayList<>();
+        Collection<UserData> converted = new ArrayList<>();
+
+        jsonDumps = DatabaseManager.getTableContents("users", "userData");
+
+        for(String dump : jsonDumps){
+            converted.add(GSON.fromJson(dump, UserData.class));
+        }
+
+        return converted;
+    }
+
     public UserData getUser(String username) throws DataAccessException {
         Collection<String> jsonDumps = new ArrayList<>();
         Collection<UserData> converted = new ArrayList<>();

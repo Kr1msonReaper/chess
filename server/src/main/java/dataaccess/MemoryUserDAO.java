@@ -5,6 +5,8 @@ import model.UserData;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static server.Server.GSON;
+
 public class MemoryUserDAO implements UserDAO {
     public Collection<UserData> users = new ArrayList<>();
 
@@ -12,6 +14,19 @@ public class MemoryUserDAO implements UserDAO {
 
         users.add(data);
         return 200;
+    }
+
+    public Collection<UserData> getUsers() throws DataAccessException {
+        Collection<String> jsonDumps = new ArrayList<>();
+        Collection<UserData> converted = new ArrayList<>();
+
+        jsonDumps = DatabaseManager.getTableContents("users", "userData");
+
+        for(String dump : jsonDumps){
+            converted.add(GSON.fromJson(dump, UserData.class));
+        }
+
+        return converted;
     }
 
     public boolean userExists(UserData data){

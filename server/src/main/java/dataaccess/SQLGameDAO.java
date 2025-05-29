@@ -19,14 +19,14 @@ public class SQLGameDAO implements GameDAO{
         ChessGame newGame = new ChessGame();
         GameData newData = new GameData(newID, "", "", gameName, newGame);
         gameData.add(newData);
-        DatabaseManager.executeSQL("INSERT INTO gameData (gameData)", GSON.toJson(newData));
+        DatabaseManager.executeSQL("INSERT INTO gameData (gameDataJSON)", GSON.toJson(newData));
         return newID;
     }
     public Collection<GameData> getGames() throws DataAccessException {
         Collection<String> jsonDumps = new ArrayList<>();
         Collection<GameData> converted = new ArrayList<>();
 
-        jsonDumps = DatabaseManager.getTableContents("gameData", "gameData");
+        jsonDumps = DatabaseManager.getTableContents("gameData", "gameDataJSON");
 
         for(String dump : jsonDumps){
             converted.add(GSON.fromJson(dump, GameData.class));
@@ -38,7 +38,7 @@ public class SQLGameDAO implements GameDAO{
         Collection<String> jsonDumps = new ArrayList<>();
         Collection<GameData> converted = new ArrayList<>();
 
-        jsonDumps = DatabaseManager.getTableContents("gameData", "gameData");
+        jsonDumps = DatabaseManager.getTableContents("gameData", "gameDataJSON");
 
         for(String dump : jsonDumps){
             converted.add(GSON.fromJson(dump, GameData.class));
@@ -57,8 +57,8 @@ public class SQLGameDAO implements GameDAO{
         gameData.remove(x);
         gameData.add(newGameInfo);
 
-        DatabaseManager.executeSQL("DELETE FROM gameData (gameData)", GSON.toJson(x));
-        DatabaseManager.executeSQL("INSERT INTO gameData (gameData)", GSON.toJson(newGameInfo));
+        DatabaseManager.deleteInsertSQL("DELETE FROM gameData WHERE gameDataJSON = (?)", GSON.toJson(x));
+        DatabaseManager.deleteInsertSQL("INSERT INTO gameData (gameDataJSON) VALUES (?)", GSON.toJson(newGameInfo));
     }
 
     public void deleteAll() throws DataAccessException {

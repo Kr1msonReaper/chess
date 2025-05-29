@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
+import static server.Server.GSON;
+
 public class MemoryAuthDAO implements AuthDAO{
 
     public Collection<AuthData> authTokens = new ArrayList<>();
@@ -18,6 +20,19 @@ public class MemoryAuthDAO implements AuthDAO{
         authTokens.add(newData);
         //Server.sqlAuthDAO.createAuth(data);
         return newData;
+    }
+
+    public Collection<AuthData> getAll() throws DataAccessException {
+        Collection<String> jsonDumps = new ArrayList<>();
+        Collection<AuthData> converted = new ArrayList<>();
+
+        jsonDumps = DatabaseManager.getTableContents("authTokens", "authData");
+
+        for(String dump : jsonDumps){
+            converted.add(GSON.fromJson(dump, AuthData.class));
+        }
+
+        return converted;
     }
 
     public AuthData getAuth(String token){

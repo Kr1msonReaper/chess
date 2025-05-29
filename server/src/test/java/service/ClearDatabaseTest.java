@@ -32,8 +32,10 @@ public class ClearDatabaseTest {
         Server.authDAO.removeAll();
         Server.gameDAO.deleteAll();
 
-        assertEquals(0, Server.userDAO.users.size());
-        assertEquals(0, Server.authDAO.authTokens.size());
+
+
+        assertEquals(0, Server.userDAO.getUsers().size());
+        assertEquals(0, Server.authDAO.getAll().size());
         assertEquals(0, Server.gameDAO.getGames().size());
     }
 

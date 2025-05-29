@@ -21,6 +21,19 @@ public class SQLAuthDAO implements AuthDAO{
         return newData;
     }
 
+    public Collection<AuthData> getAll() throws DataAccessException {
+        Collection<String> jsonDumps = new ArrayList<>();
+        Collection<AuthData> converted = new ArrayList<>();
+
+        jsonDumps = DatabaseManager.getTableContents("authTokens", "authData");
+
+        for(String dump : jsonDumps){
+            converted.add(GSON.fromJson(dump, AuthData.class));
+        }
+
+        return converted;
+    }
+
     public AuthData getAuth(String token) throws DataAccessException {
         List<String> jsonDumps = new ArrayList<>();
         List<AuthData> converted = new ArrayList<>();

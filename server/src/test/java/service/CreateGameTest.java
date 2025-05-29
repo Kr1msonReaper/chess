@@ -27,7 +27,7 @@ public class CreateGameTest {
     }
 
     @Test
-    public void createGameSuccess() {
+    public void createGameSuccess() throws DataAccessException {
         int id = Server.gameDAO.createGame("Epic Match");
         assertTrue(id >= 0);
     }
