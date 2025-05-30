@@ -1,7 +1,6 @@
 package passoff.server;
 
 import chess.ChessGame;
-import dataaccess.DataAccessException;
 import org.junit.jupiter.api.*;
 import passoff.model.*;
 import server.Server;
@@ -27,7 +26,7 @@ public class StandardAPITests {
     }
 
     @BeforeAll
-    public static void init() throws DataAccessException {
+    public static void init() {
         server = new Server();
         var port = server.run(0);
         System.out.println("Started test HTTP server on " + port);
@@ -78,8 +77,8 @@ public class StandardAPITests {
     @DisplayName("Login Bad Request")
     public void loginBadRequest() {
         TestUser[] incompleteLoginRequests = {
-            new TestUser(null, existingUser.getPassword(), existingUser.getEmail()),
-            new TestUser(existingUser.getUsername(), null, existingUser.getEmail()),
+                new TestUser(null, existingUser.getPassword(), existingUser.getEmail()),
+                new TestUser(existingUser.getUsername(), null, existingUser.getEmail()),
         };
 
         for (TestUser incompleteLoginRequest : incompleteLoginRequests) {

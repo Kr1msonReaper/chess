@@ -20,11 +20,12 @@ public class Server {
 
     public static final Gson GSON = new Gson();
 
-    public int run(int desiredPort) throws DataAccessException {
+
+    public int run(int desiredPort) {
         Spark.port(desiredPort);
         Spark.staticFiles.location("web");
 
-        DatabaseManager.createDatabase();
+
 
         authDAO = new SQLAuthDAO();
         gameDAO = new SQLGameDAO();
@@ -69,6 +70,8 @@ public class Server {
     }
 
     private Object login(Request req, Response res) throws DataAccessException {
+        DatabaseManager.createDatabase();
+
         UserData loginReq;
         try {
             loginReq = GSON.fromJson(req.body(), UserData.class);
@@ -92,6 +95,8 @@ public class Server {
     }
 
     private Object logout(Request req, Response res) throws DataAccessException {
+        DatabaseManager.createDatabase();
+
         String token = req.headers("authorization");
         if (authDAO.getAuth(token) != null) {
             authDAO.removeAuth(token);
@@ -101,6 +106,8 @@ public class Server {
     }
 
     private Object register(Request req, Response res) throws DataAccessException {
+        DatabaseManager.createDatabase();
+
         UserData registerReq;
         try {
             registerReq = GSON.fromJson(req.body(), UserData.class);
@@ -121,6 +128,8 @@ public class Server {
     }
 
     private Object listGames(Request req, Response res) throws DataAccessException {
+        DatabaseManager.createDatabase();
+
         if (!authorized(req, res)) return error(res, 401, "unauthorized");
 
         ListGamesResult result = new ListGamesResult();
@@ -131,6 +140,8 @@ public class Server {
     }
 
     private Object createGame(Request req, Response res) throws DataAccessException {
+        DatabaseManager.createDatabase();
+
         if (!authorized(req, res)) return error(res, 401, "unauthorized");
 
         CreateGameRequest gameReq = GSON.fromJson(req.body(), CreateGameRequest.class);
@@ -145,6 +156,8 @@ public class Server {
     }
 
     private Object joinGame(Request req, Response res) throws DataAccessException {
+        DatabaseManager.createDatabase();
+
         if (!authorized(req, res)) return error(res, 401, "unauthorized");
 
         JoinGameRequest joinReq = GSON.fromJson(req.body(), JoinGameRequest.class);
@@ -182,6 +195,7 @@ public class Server {
     }
 
     private Object clearDB(Request req, Response res) throws DataAccessException {
+        DatabaseManager.createDatabase();
         userDAO.removeAll();
         authDAO.removeAll();
         gameDAO.deleteAll();
