@@ -82,7 +82,7 @@ public class Server {
             return error(res, 400, "bad request");
         }
 
-        if (!userDAO.userExists(loginReq)) return error(res, 401, "user doesn't exist");
+        if (!userDAO.userExists(loginReq)) {return error(res, 401, "user doesn't exist");}
 
         UserData existingUser = userDAO.getUser(loginReq.username());
         if (!BCrypt.checkpw(loginReq.password(), existingUser.password())) {
@@ -118,7 +118,7 @@ public class Server {
             return error(res, 400, "bad request");
         }
 
-        if (userDAO.userExists(registerReq)) return error(res, 403, "already taken");
+        if (userDAO.userExists(registerReq)){ return error(res, 403, "already taken");}
 
         userDAO.createUser(registerReq);
         AuthData authInfo = authDAO.createAuth(registerReq);
@@ -130,7 +130,7 @@ public class Server {
     private Object listGames(Request req, Response res) throws DataAccessException {
         DatabaseManager.createDatabase();
 
-        if (!authorized(req, res)) return error(res, 401, "unauthorized");
+        if (!authorized(req, res)) {return error(res, 401, "unauthorized");}
 
         ListGamesResult result = new ListGamesResult();
         result.games = gameDAO.getGames();
@@ -142,10 +142,10 @@ public class Server {
     private Object createGame(Request req, Response res) throws DataAccessException {
         DatabaseManager.createDatabase();
 
-        if (!authorized(req, res)) return error(res, 401, "unauthorized");
+        if (!authorized(req, res)) {return error(res, 401, "unauthorized");}
 
         CreateGameRequest gameReq = GSON.fromJson(req.body(), CreateGameRequest.class);
-        if (isBlank(gameReq.gameName)) return error(res, 400, "bad request");
+        if (isBlank(gameReq.gameName)) {return error(res, 400, "bad request");}
 
         int gameID = gameDAO.createGame(gameReq.gameName);
         CreateGameResult result = new CreateGameResult();
@@ -158,7 +158,7 @@ public class Server {
     private Object joinGame(Request req, Response res) throws DataAccessException {
         DatabaseManager.createDatabase();
 
-        if (!authorized(req, res)) return error(res, 401, "unauthorized");
+        if (!authorized(req, res)) {return error(res, 401, "unauthorized");}
 
         JoinGameRequest joinReq = GSON.fromJson(req.body(), JoinGameRequest.class);
         String token = req.headers("authorization");
