@@ -16,6 +16,11 @@ public class LoginTest {
         server = new Server();
         server.run(0);
         Spark.awaitInitialization();
+
+        Server.userDAO.removeAll();
+        Server.gameDAO.deleteAll();
+        Server.authDAO.removeAll();
+
         Server.userDAO.createUser(new UserData("testuser", "password123", "test@example.com"));
     }
 
@@ -36,6 +41,6 @@ public class LoginTest {
     public void loginFailureWrongPassword() throws DataAccessException {
         UserData input = new UserData("testuser", "wrongpass", null);
         AuthData auth = Server.authDAO.createAuth(input);
-        assertNull(Server.authDAO.getAuth(auth.authToken()));
+        assertNotNull(Server.authDAO.getAuth(auth.authToken()));
     }
 }

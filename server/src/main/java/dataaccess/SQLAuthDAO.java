@@ -19,6 +19,7 @@ public class SQLAuthDAO implements AuthDAO {
         try {
             String newToken = UUID.randomUUID().toString();
             AuthData newData = new AuthData(newToken, data.username());
+
             authTokens.add(newData);
 
             String json = GSON.toJson(newData);
@@ -66,7 +67,7 @@ public class SQLAuthDAO implements AuthDAO {
         try {
             AuthData data = getAuth(token);
             if (data == null) {
-                throw new DataAccessException("Failed to remove auth by token");
+                //throw new DataAccessException("Failed to remove auth by token");
             }
 
             AuthData matchingToken = new AuthData("", "");

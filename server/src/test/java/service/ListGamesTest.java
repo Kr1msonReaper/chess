@@ -1,5 +1,6 @@
 package service;
 import dataaccess.DataAccessException;
+import dataaccess.DatabaseManager;
 import model.GameData;
 import model.UserData;
 import org.junit.jupiter.api.*;
@@ -18,6 +19,9 @@ public class ListGamesTest {
         server = new Server();
         server.run(0);
         Spark.awaitInitialization();
+        Server.userDAO.removeAll();
+        Server.gameDAO.deleteAll();
+        Server.authDAO.removeAll();
 
         UserData user = new UserData("viewer", "pass", "email@a.com");
         Server.userDAO.createUser(user);
