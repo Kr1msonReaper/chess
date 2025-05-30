@@ -16,9 +16,10 @@ public class SQLUserDAO implements UserDAO {
     public int createUser(UserData data) throws DataAccessException {
         try {
             DatabaseManager.createDatabase();
-            users.add(data);
+
             var encryptedPass = BCrypt.hashpw(data.password(), BCrypt.gensalt());
             var alteredData = data.assignPassword(encryptedPass);
+            users.add(alteredData);
             DatabaseManager.deleteInsertSQL("INSERT INTO users (userData) VALUES (?)", GSON.toJson(alteredData));
             return 200;
         } catch (Exception e) {
@@ -75,6 +76,7 @@ public class SQLUserDAO implements UserDAO {
     @Override
     public void removeAll() throws DataAccessException {
         try {
+            users.clear();
             DatabaseManager.executeSQL("DELETE FROM users");
         } catch (Exception e) {
             throw new DataAccessException("Failed to remove all users", e);

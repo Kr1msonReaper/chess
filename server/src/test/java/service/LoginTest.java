@@ -36,6 +36,6 @@ public class LoginTest {
     public void loginFailureWrongPassword() throws DataAccessException {
         UserData input = new UserData("testuser", "wrongpass", null);
         AuthData auth = Server.authDAO.createAuth(input);
-        assertNull(Server.authDAO.getAuth(auth.authToken())); // simulate rejection
+        assertNull(Server.authDAO.getAuth(auth.authToken()));
     }
 }

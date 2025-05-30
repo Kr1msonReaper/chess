@@ -66,11 +66,19 @@ public class SQLAuthDAO implements AuthDAO {
         try {
             AuthData data = getAuth(token);
             if (data == null) {
-                return;
+                throw new DataAccessException("Failed to remove auth by token");
             }
 
+            AuthData matchingToken = new AuthData("", "");
+            for(AuthData x : authTokens){
+                if(x.authToken().equals(token)){
+                    matchingToken = x;
+                }
+            }
+            authTokens.remove(matchingToken);
+
             String json = GSON.toJson(data).replace("\"", "\"\""); // Basic escape for SQL if needed
-            String sql = "DELETE FROM authTokens WHERE authData = '" + json + "'";
+            String sql = "DELETE FROM authTokens WHERE authData LIKE '%" + token + "%';";
 
             DatabaseManager.executeSQL(sql);
         } catch (Exception e) {
@@ -81,6 +89,7 @@ public class SQLAuthDAO implements AuthDAO {
     @Override
     public void removeAll() throws DataAccessException {
         try {
+            authTokens.clear();
             DatabaseManager.executeSQL("DELETE FROM authTokens");
         } catch (Exception e) {
             throw new DataAccessException("Failed to remove all auth data", e);

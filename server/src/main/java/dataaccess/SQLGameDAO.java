@@ -64,9 +64,6 @@ public class SQLGameDAO implements GameDAO {
     @Override
     public void replaceGameData(GameData oldGame, GameData newGameInfo) throws DataAccessException {
         try {
-            if (!gameData.contains(oldGame)) {
-                return;
-            }
             gameData.remove(oldGame);
             gameData.add(newGameInfo);
 
@@ -81,6 +78,7 @@ public class SQLGameDAO implements GameDAO {
     @Override
     public void deleteAll() throws DataAccessException {
         try {
+            gameData.clear();
             DatabaseManager.executeSQL("DELETE FROM gameData");
         } catch (Exception e) {
             throw new DataAccessException("Failed to delete all games", e);
