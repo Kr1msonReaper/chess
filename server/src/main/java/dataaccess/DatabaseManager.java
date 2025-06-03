@@ -60,7 +60,7 @@ public class DatabaseManager {
     static public void executeSQL(String command) throws DataAccessException{
         try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword)){
             conn.prepareStatement("USE " + databaseName + ";").executeUpdate();
-            System.out.println(command);
+            //System.out.println(command);
             conn.prepareStatement(command).executeUpdate();
 
         } catch (SQLException e){
@@ -72,7 +72,7 @@ public class DatabaseManager {
     static public void executeSQL(String command, String dump) throws DataAccessException{
         try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword)){
             conn.prepareStatement("USE " + databaseName).executeUpdate();
-            System.out.println(command + " VALUES (" + "\'" + dump + "\'" + ");");
+            //System.out.println(command + " VALUES (" + "\'" + dump + "\'" + ");");
             var statement = conn.prepareStatement(command + " VALUES (?);");
             statement.setString(1, dump);
             statement.executeUpdate();
@@ -87,7 +87,7 @@ public class DatabaseManager {
             conn.prepareStatement("USE " + databaseName).executeUpdate();
             var statement = conn.prepareStatement(command + ";");
             statement.setString(1, dump);
-            System.out.println(statement);
+            //System.out.println(statement);
             statement.executeUpdate();
         } catch (SQLException e){
             System.out.println(e);
@@ -100,7 +100,7 @@ public class DatabaseManager {
             conn.prepareStatement("USE " + databaseName).executeUpdate();
             var statement = conn.prepareStatement(command);
             statement.setString(1, "%" + dump + "%");
-            System.out.println(statement);
+            //System.out.println(statement);
             statement.executeUpdate();
         } catch (SQLException e){
             System.out.println(e);
@@ -113,7 +113,7 @@ public class DatabaseManager {
             conn.prepareStatement("USE " + databaseName).executeUpdate();
             List<String> results = new ArrayList<>();
             var command = conn.prepareStatement("SELECT * FROM " + table);
-            System.out.println(command);
+            //System.out.println(command);
             var rs = command.executeQuery();
             while(rs.next()){
                 results.add(rs.getString(child));
