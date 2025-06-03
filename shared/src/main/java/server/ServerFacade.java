@@ -1,18 +1,16 @@
-package client;
+package server;
 
 import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
-import service.CreateGameRequest;
-import service.CreateGameResult;
-import service.JoinGameRequest;
-import service.ListGamesResult;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collection;
+
+import service.*;
 
 public class ServerFacade {
     private final int port;
