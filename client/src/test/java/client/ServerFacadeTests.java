@@ -88,6 +88,23 @@ public class ServerFacadeTests {
         assertFalse(server.gameDAO.getGames().isEmpty());
     }
 
+    @Test
+    void joinGame() throws Exception {
+        UserData prereqData = new UserData("player1", "password", "p1@email.com");
+        AuthData data = facade.register(prereqData);
+        CreateGameRequest newGameReq = new CreateGameRequest();
+        newGameReq.gameName = "New Game";
+        int newID = facade.createGame(data, newGameReq);
+
+        JoinGameRequest req = new JoinGameRequest();
+        req.playerColor = "WHITE";
+        req.gameID = newID;
+        facade.joinGame(req, data);
+
+        assertTrue(server.gameDAO.getGame(newID).whiteUsername().equals("player1"));
+        assertFalse(!server.gameDAO.getGame(newID).whiteUsername().equals("player1"));
+    }
+
     @BeforeEach
     public void clearDB() throws DataAccessException {
         server.authDAO.removeAll();

@@ -54,6 +54,24 @@ public class ServerFacade {
         return readResponse(connection);
     }
 
+    public String sendPutRequest(String endpoint, String jsonBody, String auth) throws IOException {
+        URL url = new URL(baseUrl + endpoint);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("PUT");
+        connection.setRequestProperty("Content-Type", "application/json");
+        if(!auth.isEmpty()){
+            connection.setRequestProperty("Authorization", auth);
+        }
+        connection.setDoOutput(true);
+
+        try (OutputStream os = connection.getOutputStream()) {
+            os.write(jsonBody.getBytes());
+            os.flush();
+        }
+
+        return readResponse(connection);
+    }
+
     public String sendDeleteRequest(String endpoint, String jsonBody, String auth) throws IOException {
         URL url = new URL(baseUrl + endpoint);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -110,8 +128,8 @@ public class ServerFacade {
         sendDeleteRequest("/session", "", data.authToken());
     }
 
-    public void createGame(AuthData data, CreateGameRequest req) throws IOException {
-        sendPostRequest("/game", GSON.toJson(req), data.authToken());
+    public int createGame(AuthData data, CreateGameRequest req) throws IOException {
+        return GSON.fromJson(sendPostRequest("/game", GSON.toJson(req), data.authToken()), CreateGameResult.class).gameID;
     }
 
     public Collection<GameData> listGames(AuthData data) throws IOException {
@@ -119,4 +137,7 @@ public class ServerFacade {
         return res.games;
     }
 
+    public void joinGame(JoinGameRequest req, AuthData data) throws IOException {
+        sendPutRequest("/game", GSON.toJson(req), data.authToken());
+    }
 }
