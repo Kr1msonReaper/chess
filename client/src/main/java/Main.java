@@ -123,7 +123,8 @@ public class Main {
         }
     }
 
-    private static Boolean drawSquare(StringBuilder drawnBoard, ChessPiece piece, String prettyPiece, Boolean isWhite, int y, int x, boolean isWhitePerspective) {
+    private static Boolean drawSquare(StringBuilder drawnBoard, ChessPiece piece, String prettyPiece,
+                                      Boolean isWhite, int y, int x, boolean isWhitePerspective) {
         if(isWhite){
             drawnBoard.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
             isWhite = false;
