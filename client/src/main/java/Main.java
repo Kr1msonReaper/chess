@@ -20,373 +20,477 @@ public class Main {
         if(piece == null){
             return EscapeSequences.EMPTY;
         }
-        if(piece.pieceType == ChessPiece.PieceType.PAWN){
-            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
-                return EscapeSequences.WHITE_PAWN;
-            } else {return EscapeSequences.BLACK_PAWN;}
+        return getPieceByType(piece);
+    }
+
+    private static String getPieceByType(ChessPiece piece) {
+        switch(piece.pieceType) {
+            case PAWN:
+                return piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
+                        EscapeSequences.WHITE_PAWN : EscapeSequences.BLACK_PAWN;
+            case ROOK:
+                return piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
+                        EscapeSequences.WHITE_ROOK : EscapeSequences.BLACK_ROOK;
+            case KNIGHT:
+                return piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
+                        EscapeSequences.WHITE_KNIGHT : EscapeSequences.BLACK_KNIGHT;
+            case BISHOP:
+                return piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
+                        EscapeSequences.WHITE_BISHOP : EscapeSequences.BLACK_BISHOP;
+            case KING:
+                return piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
+                        EscapeSequences.WHITE_KING : EscapeSequences.BLACK_KING;
+            case QUEEN:
+                return piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
+                        EscapeSequences.WHITE_QUEEN : EscapeSequences.BLACK_QUEEN;
+            default:
+                return EscapeSequences.EMPTY;
         }
-        if(piece.pieceType == ChessPiece.PieceType.ROOK){
-            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
-                return EscapeSequences.WHITE_ROOK;
-            } else {return EscapeSequences.BLACK_ROOK;}
-        }
-        if(piece.pieceType == ChessPiece.PieceType.KNIGHT){
-            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
-                return EscapeSequences.WHITE_KNIGHT;
-            } else {return EscapeSequences.BLACK_KNIGHT;}
-        }
-        if(piece.pieceType == ChessPiece.PieceType.BISHOP){
-            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
-                return EscapeSequences.WHITE_BISHOP;
-            } else {return EscapeSequences.BLACK_BISHOP;}
-        }
-        if(piece.pieceType == ChessPiece.PieceType.KING){
-            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
-                return EscapeSequences.WHITE_KING;
-            } else {return EscapeSequences.BLACK_KING;}
-        }
-        if(piece.pieceType == ChessPiece.PieceType.QUEEN){
-            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
-                return EscapeSequences.WHITE_QUEEN;
-            } else {return EscapeSequences.BLACK_QUEEN;}
-        }
-        return EscapeSequences.EMPTY;
     }
 
     public static String getLetter(int num){
-        if(num == 1){
-            return "a";
-        }
-        if(num == 2){
-            return "b";
-        }
-        if(num == 3){
-            return "c";
-        }
-        if(num == 4){
-            return "d";
-        }
-        if(num == 5){
-            return "e";
-        }
-        if(num == 6){
-            return "f";
-        }
-        if(num == 7){
-            return "g";
-        }
-        if(num == 8){
-            return "h";
-        }
-        return "";
+        String[] letters = {"", "a", "b", "c", "d", "e", "f", "g", "h"};
+        return (num >= 1 && num <= 8) ? letters[num] : "";
     }
 
     public static String drawBlackBoard(GameData data){
-        String drawnBoard = "";
-        String stringifiedBoard = data.game().getBoard().toString();
+        StringBuilder drawnBoard = new StringBuilder();
         Boolean isWhite = true;
+
         for(int x = 0; x < 10; x++){
-            for(int y = 8; y > 0; y--){
-                if(x == 0 || x == 9){
-                    if(y == 8){
-                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + "  ";
-                    }
-                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_BLACK
-                            + "♚" + EscapeSequences.SET_TEXT_COLOR_WHITE + EscapeSequences.SET_TEXT_COLOR_WHITE
-                            + " " + getLetter(y);
-                    if(y == 1){
-                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
-                        drawnBoard += "\n";
-                    }
-                    continue;
-                }
-                ChessPiece piece = data.game().getBoard().getPosition(x, y).getPiece();
-                String prettyPiece = getUnicodePiece(piece);
-
-                if(y == 8){
-                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
-                }
-
-                if(isWhite){
-                    drawnBoard += EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
-                    isWhite = false;
-                } else {
-                    drawnBoard += EscapeSequences.SET_BG_COLOR_DARK_GREY;
-                    isWhite = true;
-                }
-
-                if(piece == null){
-                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + prettyPiece;
-                    if(y == 1){
-                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
-                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
-                        drawnBoard += "\n";
-                        isWhite = !isWhite;
-                    }
-                    continue;
-                }
-                if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
-                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + prettyPiece;
-                } else {
-                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_BLACK + prettyPiece;
-                }
-                if(y == 1){
-                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
-                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
-                    drawnBoard += "\n";
-                    isWhite = !isWhite;
-                }
-            }
+            isWhite = drawBlackRow(data, drawnBoard, x, isWhite);
         }
-        System.out.println(drawnBoard);
-        return drawnBoard;
+
+        String result = drawnBoard.toString();
+        System.out.println(result);
+        return result;
+    }
+
+    private static Boolean drawBlackRow(GameData data, StringBuilder drawnBoard, int x, Boolean isWhite) {
+        for(int y = 8; y > 0; y--){
+            if(x == 0 || x == 9){
+                drawBlackBorder(drawnBoard, y);
+                continue;
+            }
+
+            ChessPiece piece = data.game().getBoard().getPosition(x, y).getPiece();
+            String prettyPiece = getUnicodePiece(piece);
+
+            if(y == 8){
+                drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(" ").append(x).append(" ");
+            }
+
+            isWhite = drawBlackSquare(drawnBoard, piece, prettyPiece, isWhite, y, x);
+        }
+        return isWhite;
+    }
+
+    private static void drawBlackBorder(StringBuilder drawnBoard, int y) {
+        if(y == 8){
+            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
+                    .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
+                    .append("  ");
+        }
+        drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
+                .append(EscapeSequences.SET_TEXT_COLOR_BLACK)
+                .append("♚")
+                .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
+                .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
+                .append(" ")
+                .append(getLetter(y));
+        if(y == 1){
+            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK).append("\n");
+        }
+    }
+
+    private static Boolean drawBlackSquare(StringBuilder drawnBoard, ChessPiece piece, String prettyPiece, Boolean isWhite, int y, int x) {
+        // Set background color
+        if(isWhite){
+            drawnBoard.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+            isWhite = false;
+        } else {
+            drawnBoard.append(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+            isWhite = true;
+        }
+
+        // Draw piece
+        if(piece == null){
+            drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(prettyPiece);
+        } else {
+            String textColor = piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
+                    EscapeSequences.SET_TEXT_COLOR_WHITE : EscapeSequences.SET_TEXT_COLOR_BLACK;
+            drawnBoard.append(textColor).append(prettyPiece);
+        }
+
+        // End of row handling
+        if(y == 1){
+            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
+                    .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
+                    .append(" ").append(x).append(" ")
+                    .append(EscapeSequences.SET_BG_COLOR_BLACK)
+                    .append("\n");
+            isWhite = !isWhite;
+        }
+
+        return isWhite;
     }
 
     public static String drawWhiteBoard(GameData data){
-        String drawnBoard = "";
-        String stringifiedBoard = data.game().getBoard().toString();
+        StringBuilder drawnBoard = new StringBuilder();
         Boolean isWhite = true;
+
         for(int x = 9; x > -1; x--){
-            for(int y = 1; y < 9; y++){
-                if(x == 0 || x == 9){
-                    if(y == 1){
-                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + "  ";
-                    }
-                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_BLACK
-                            + "♚" + EscapeSequences.SET_TEXT_COLOR_WHITE + EscapeSequences.SET_TEXT_COLOR_WHITE
-                            + " " + getLetter(y);
-                    if(y == 8){
-                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
-                        drawnBoard += "\n";
-                    }
-                    continue;
-                }
-                ChessPiece piece = data.game().getBoard().getPosition(x, y).getPiece();
-                String prettyPiece = getUnicodePiece(piece);
-
-                if(y == 1){
-                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
-                }
-
-                if(isWhite){
-                    drawnBoard += EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
-                    isWhite = false;
-                } else {
-                    drawnBoard += EscapeSequences.SET_BG_COLOR_DARK_GREY;
-                    isWhite = true;
-                }
-
-                if(piece == null){
-                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + prettyPiece;
-                    if(y == 8){
-                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
-                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
-                        drawnBoard += "\n";
-                        isWhite = !isWhite;
-                    }
-                    continue;
-                }
-                if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
-                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + prettyPiece;
-                } else {
-                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_BLACK + prettyPiece;
-                }
-                if(y == 8){
-                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
-                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
-                    drawnBoard += "\n";
-                    isWhite = !isWhite;
-                }
-            }
+            isWhite = drawWhiteRow(data, drawnBoard, x, isWhite);
         }
-        System.out.println(drawnBoard);
-        return drawnBoard;
+
+        String result = drawnBoard.toString();
+        System.out.println(result);
+        return result;
+    }
+
+    private static Boolean drawWhiteRow(GameData data, StringBuilder drawnBoard, int x, Boolean isWhite) {
+        for(int y = 1; y < 9; y++){
+            if(x == 0 || x == 9){
+                drawWhiteBorder(drawnBoard, y);
+                continue;
+            }
+
+            ChessPiece piece = data.game().getBoard().getPosition(x, y).getPiece();
+            String prettyPiece = getUnicodePiece(piece);
+
+            if(y == 1){
+                drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(" ").append(x).append(" ");
+            }
+
+            isWhite = drawWhiteSquare(drawnBoard, piece, prettyPiece, isWhite, y, x);
+        }
+        return isWhite;
+    }
+
+    private static void drawWhiteBorder(StringBuilder drawnBoard, int y) {
+        if(y == 1){
+            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
+                    .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
+                    .append("  ");
+        }
+        drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
+                .append(EscapeSequences.SET_TEXT_COLOR_BLACK)
+                .append("♚")
+                .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
+                .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
+                .append(" ")
+                .append(getLetter(y));
+        if(y == 8){
+            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK).append("\n");
+        }
+    }
+
+    private static Boolean drawWhiteSquare(StringBuilder drawnBoard, ChessPiece piece, String prettyPiece, Boolean isWhite, int y, int x) {
+        // Set background color
+        if(isWhite){
+            drawnBoard.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+            isWhite = false;
+        } else {
+            drawnBoard.append(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+            isWhite = true;
+        }
+
+        // Draw piece
+        if(piece == null){
+            drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(prettyPiece);
+        } else {
+            String textColor = piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
+                    EscapeSequences.SET_TEXT_COLOR_WHITE : EscapeSequences.SET_TEXT_COLOR_BLACK;
+            drawnBoard.append(textColor).append(prettyPiece);
+        }
+
+        // End of row handling
+        if(y == 8){
+            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
+                    .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
+                    .append(" ").append(x).append(" ")
+                    .append(EscapeSequences.SET_BG_COLOR_BLACK)
+                    .append("\n");
+            isWhite = !isWhite;
+        }
+
+        return isWhite;
     }
 
     public static void main(String[] args) throws IOException {
         facade = new ServerFacade(8080);
-
         boolean isLoggedIn = false;
         UserData currentUser;
         AuthData currentToken = new AuthData("", "");
 
         System.out.println("♕ 240 Chess Client. Type \'Help\' to get started.");
+
         while(true){
-            if(isLoggedIn){
-                System.out.print("[LOGGED_IN] >>>");
-            } else {
-                System.out.print("[LOGGED_OUT] >>>");
+            String[] line = getInputLine(isLoggedIn);
+            processCommand(line, isLoggedIn, currentToken);
+
+            // Update login status and token based on command results
+            CommandResult result = executeCommand(line, isLoggedIn, currentToken);
+            isLoggedIn = result.isLoggedIn;
+            currentToken = result.authToken;
+            if(result.shouldExit) break;
+        }
+    }
+
+    private static String[] getInputLine(boolean isLoggedIn) {
+        if(isLoggedIn){
+            System.out.print("[LOGGED_IN] >>>");
+        } else {
+            System.out.print("[LOGGED_OUT] >>>");
+        }
+        Scanner scanner = new Scanner(System.in);
+        return scanner.nextLine().toLowerCase(Locale.ROOT).split(" ");
+    }
+
+    private static void processCommand(String[] line, boolean isLoggedIn, AuthData currentToken) {
+        // This method is kept for potential future use or logging
+    }
+
+    private static CommandResult executeCommand(String[] line, boolean isLoggedIn, AuthData currentToken) throws IOException {
+        CommandResult result = new CommandResult(isLoggedIn, currentToken, false);
+
+        if(line[0].contains("help")){
+            handleHelpCommand(isLoggedIn);
+        } else if(line[0].contains("register")){
+            result = handleRegisterCommand(line);
+        } else if(line[0].contains("login")){
+            result = handleLoginCommand(line);
+        } else if(line[0].contains("quit")){
+            handleQuitCommand(currentToken);
+            result.shouldExit = true;
+        } else if(line[0].contains("logout")){
+            result = handleLogoutCommand(currentToken);
+        } else if(line[0].contains("create")){
+            handleCreateCommand(line, currentToken);
+        } else if(line[0].contains("list")){
+            handleListCommand(currentToken);
+        } else if(line[0].contains("join")){
+            handleJoinCommand(line, currentToken);
+        } else if(line[0].contains("observe")){
+            handleObserveCommand(line, currentToken);
+        } else {
+            System.out.println("Error: Command not recognized.");
+        }
+
+        return result;
+    }
+
+    private static void handleHelpCommand(boolean isLoggedIn) {
+        if(!isLoggedIn){
+            System.out.println("Register <USERNAME> <PASSWORD> <EMAIL> - to create an account\n" +
+                    "login <USERNAME> <PASSWORD> - to play chess\n" +
+                    "quit - playing chess\n" +
+                    "help - with possible commands");
+        } else {
+            System.out.println("quit - playing chess\n" +
+                    "help - with possible commands\n" +
+                    "logout - log out\n" +
+                    "create <NAME> - create a new game.\n" +
+                    "list - list existing game id's.\n" +
+                    "join <GAME-ID> <DESIRED-COLOR> - join an existing game.\n" +
+                    "observe <GAME-ID> - observe a game in progress.");
+        }
+    }
+
+    private static CommandResult handleRegisterCommand(String[] line) {
+        if(line.length != 4){
+            System.out.println("Error: Incorrect number of arguments.");
+            return new CommandResult(false, new AuthData("", ""), false);
+        }
+
+        try{
+            UserData newUser = new UserData(line[1], line[2], line[3]);
+            AuthData token = facade.register(newUser);
+            if(token.authToken() == null){
+                Integer.parseInt("abc"); // Force exception
             }
-            Scanner scanner = new Scanner(System.in);
-            String[] line = scanner.nextLine().toLowerCase(Locale.ROOT).split(" ");
+            System.out.println("Logged in as " + line[1]);
+            return new CommandResult(true, token, false);
+        } catch(Exception e){
+            System.out.println("Error: Couldn't register, name taken.");
+            return new CommandResult(false, new AuthData("", ""), false);
+        }
+    }
 
-            if(line[0].contains("help")){
-                if(!isLoggedIn){
-                    System.out.println("Register <USERNAME> <PASSWORD> <EMAIL> - to create an account\n" +
-                            "login <USERNAME> <PASSWORD> - to play chess\n" +
-                            "quit - playing chess\n" +
-                            "help - with possible commands");
-                } else {
-                    System.out.println("quit - playing chess\n" +
-                                       "help - with possible commands\n" +
-                                       "logout - log out\n" +
-                                       "create <NAME> - create a new game.\n" +
-                                       "list - list existing game id's.\n" +
-                                       "join <GAME-ID> <DESIRED-COLOR> - join an existing game.\n" +
-                                       "observe <GAME-ID> - observe a game in progress.");
-                }
-            } else if(line[0].contains("register")){
-                if(line.length == 4){
-                    try{
-                        UserData newUser = new UserData(line[1], line[2], line[3]);
-                        currentToken = facade.register(newUser);
-                        if(currentToken.authToken() == null){
-                            Integer.parseInt("abc");
-                        }
-                        isLoggedIn = true;
-                        currentUser = newUser;
-                        System.out.println("Logged in as " + line[1]);
-                    } catch(Exception e){
-                        System.out.println("Error: Couldn't register, name taken.");
-                    }
+    private static CommandResult handleLoginCommand(String[] line) {
+        if(line.length != 3){
+            System.out.println("Error: Incorrect number of arguments.");
+            return new CommandResult(false, new AuthData("", ""), false);
+        }
 
-                } else {
-                    System.out.println("Error: Incorrect number of arguments.");
-                }
-            } else if(line[0].contains("login")){
-                if(line.length == 3){
-                    try{
-                        UserData newUser = new UserData(line[1], line[2], "");
-                        currentToken = facade.login(newUser);
-                        if(currentToken.authToken() == null){
-                            Integer.parseInt("abc");
-                        }
-                        isLoggedIn = true;
-                        currentUser = newUser;
-                        System.out.println("Logged in as " + line[1]);
-                    } catch(Exception e){
-                        System.out.println("Error: Couldn't log in.");
-                    }
-                } else {
-                    System.out.println("Error: Incorrect number of arguments.");
-                }
-            } else if(line[0].contains("quit")){
-                facade.logout(currentToken);
-                System.out.println("Logged out");
-                System.exit(0);
-            } else if(line[0].contains("logout")){
-                try{
-                    facade.logout(currentToken);
-                    isLoggedIn = false;
-                    System.out.println("Logged out");
-                } catch(Exception e){
-                    System.out.println("Error: " + e);
-                }
-            } else if(line[0].contains("create")){
-                if(line.length == 1){
-                    System.out.println("Please specify a game name.");
-                }
-                CreateGameRequest req = new CreateGameRequest();
-                req.gameName = line[1];
-                facade.createGame(currentToken, req);
-            } else if(line[0].contains("list")){
-                Collection<GameData> games = facade.listGames(currentToken);
-                if(games == null){continue;}
-                int i = 1;
-                for(GameData data : games){
-                    System.out.println("[" + i + "] " + data.gameName() + " - Players: " + (data.whiteUsername() != null && !data.whiteUsername().isEmpty() ? data.whiteUsername() : "N/A") + " (White) & " + (data.blackUsername() != null && !data.blackUsername().isEmpty() ? data.blackUsername() : "N/A") + " (Black)");
-                    i++;
-                }
-            } else if(line[0].contains("join")){
-                if(line.length != 3){
-                    System.out.println("Error: Incorrect number of arguments.");
-                    continue;
-                }
-                JoinGameRequest req = new JoinGameRequest();
-                req.playerColor = line[2];
-                try {
-                    req.gameID = Integer.parseInt(line[1]);
-                } catch(Exception e){
-                    System.out.println("Error: Incorrect game number.");
-                    continue;
-                }
-
-                Collection<GameData> games1 = facade.listGames(currentToken);
-                if(games1 == null){continue;}
-                int i = 1;
-                for(GameData data : games1){
-                    if(i == req.gameID){
-                        req.gameID = data.gameID();
-                        break;
-                    }
-                    i++;
-                }
-
-                String result = facade.joinGame(req, currentToken);
-
-                if(result.contains("Error")){
-                    System.out.println("Error: Spot already taken, incorrect game number, or unrecognizable color.");
-                    continue;
-                }
-
-                GameData chosenGame = new GameData(1, "", "", "", new ChessGame());
-                Collection<GameData> games = facade.listGames(currentToken);
-                for(GameData game : games){
-                    if (game.gameID() == req.gameID){
-                        chosenGame = game;
-                    }
-                }
-
-                if(line[2].toLowerCase(Locale.ROOT).equals("white")){
-                    drawWhiteBoard(chosenGame);
-                } else if(line[2].toLowerCase(Locale.ROOT).equals("black")){
-                    drawBlackBoard(chosenGame);
-                } else {
-                    System.out.println("Incorrect color chosen.");
-                }
-            } else if(line[0].contains("observe")){
-
-                if(line.length != 2){
-                    System.out.println("Incorrect number of arguments.");
-                    continue;
-                }
-                int id = 0;
-                try {
-                    id = Integer.parseInt(line[1]);
-                } catch(Exception e){
-                    System.out.println("Error: Incorrect game number.");
-                    continue;
-                }
-
-                Collection<GameData> games1 = facade.listGames(currentToken);
-                if(games1 == null){continue;}
-                int i = 1;
-                Boolean foundGame = false;
-                for(GameData data : games1){
-                    if(i == id){
-                        id = data.gameID();
-                        foundGame = true;
-                        break;
-                    }
-                    i++;
-                }
-
-                if(!foundGame){
-                    System.out.println("Game does not exist.");
-                    continue;
-                }
-
-                GameData chosenGame = new GameData(1, "", "", "", new ChessGame());
-                Collection<GameData> games = facade.listGames(currentToken);
-                for(GameData game : games){
-                    if (game.gameID() == id){
-                        chosenGame = game;
-                    }
-                }
-                drawWhiteBoard(chosenGame);
-            } else {
-                System.out.println("Error: Command not recognized.");
+        try{
+            UserData newUser = new UserData(line[1], line[2], "");
+            AuthData token = facade.login(newUser);
+            if(token.authToken() == null){
+                Integer.parseInt("abc"); // Force exception
             }
+            System.out.println("Logged in as " + line[1]);
+            return new CommandResult(true, token, false);
+        } catch(Exception e){
+            System.out.println("Error: Couldn't log in.");
+            return new CommandResult(false, new AuthData("", ""), false);
+        }
+    }
+
+    private static void handleQuitCommand(AuthData currentToken) throws IOException {
+        facade.logout(currentToken);
+        System.out.println("Logged out");
+        System.exit(0);
+    }
+
+    private static CommandResult handleLogoutCommand(AuthData currentToken) {
+        try{
+            facade.logout(currentToken);
+            System.out.println("Logged out");
+            return new CommandResult(false, new AuthData("", ""), false);
+        } catch(Exception e){
+            System.out.println("Error: " + e);
+            return new CommandResult(true, currentToken, false);
+        }
+    }
+
+    private static void handleCreateCommand(String[] line, AuthData currentToken) throws IOException {
+        if(line.length == 1){
+            System.out.println("Please specify a game name.");
+            return;
+        }
+        CreateGameRequest req = new CreateGameRequest();
+        req.gameName = line[1];
+        facade.createGame(currentToken, req);
+    }
+
+    private static void handleListCommand(AuthData currentToken) throws IOException {
+        Collection<GameData> games = facade.listGames(currentToken);
+        if(games == null) return;
+
+        int i = 1;
+        for(GameData data : games){
+            String whiteName = (data.whiteUsername() != null && !data.whiteUsername().isEmpty()) ?
+                    data.whiteUsername() : "N/A";
+            String blackName = (data.blackUsername() != null && !data.blackUsername().isEmpty()) ?
+                    data.blackUsername() : "N/A";
+            System.out.println("[" + i + "] " + data.gameName() + " - Players: " +
+                    whiteName + " (White) & " + blackName + " (Black)");
+            i++;
+        }
+    }
+
+    private static void handleJoinCommand(String[] line, AuthData currentToken) throws IOException {
+        if(line.length != 3){
+            System.out.println("Error: Incorrect number of arguments.");
+            return;
+        }
+
+        JoinGameRequest req = createJoinRequest(line, currentToken);
+        if(req == null) return;
+
+        String result = facade.joinGame(req, currentToken);
+        if(result.contains("Error")){
+            System.out.println("Error: Spot already taken, incorrect game number, or unrecognizable color.");
+            return;
+        }
+
+        GameData chosenGame = findGameById(req.gameID, currentToken);
+        displayGameBoard(line[2], chosenGame);
+    }
+
+    private static JoinGameRequest createJoinRequest(String[] line, AuthData currentToken) throws IOException {
+        JoinGameRequest req = new JoinGameRequest();
+        req.playerColor = line[2];
+        try {
+            req.gameID = Integer.parseInt(line[1]);
+        } catch(Exception e){
+            System.out.println("Error: Incorrect game number.");
+            return null;
+        }
+
+        Collection<GameData> games = facade.listGames(currentToken);
+        if(games == null) return null;
+
+        int i = 1;
+        for(GameData data : games){
+            if(i == req.gameID){
+                req.gameID = data.gameID();
+                break;
+            }
+            i++;
+        }
+        return req;
+    }
+
+    private static GameData findGameById(int gameId, AuthData currentToken) throws IOException {
+        Collection<GameData> games = facade.listGames(currentToken);
+        for(GameData game : games){
+            if (game.gameID() == gameId){
+                return game;
+            }
+        }
+        return new GameData(1, "", "", "", new ChessGame());
+    }
+
+    private static void displayGameBoard(String color, GameData chosenGame) {
+        String lowerColor = color.toLowerCase(Locale.ROOT);
+        if(lowerColor.equals("white")){
+            drawWhiteBoard(chosenGame);
+        } else if(lowerColor.equals("black")){
+            drawBlackBoard(chosenGame);
+        } else {
+            System.out.println("Incorrect color chosen.");
+        }
+    }
+
+    private static void handleObserveCommand(String[] line, AuthData currentToken) throws IOException {
+        if(line.length != 2){
+            System.out.println("Incorrect number of arguments.");
+            return;
+        }
+
+        int id = 0;
+        try {
+            id = Integer.parseInt(line[1]);
+        } catch(Exception e){
+            System.out.println("Error: Incorrect game number.");
+            return;
+        }
+
+        int gameId = findGameIdFromList(id, currentToken);
+        if(gameId == -1){
+            System.out.println("Game does not exist.");
+            return;
+        }
+
+        GameData chosenGame = findGameById(gameId, currentToken);
+        drawWhiteBoard(chosenGame);
+    }
+
+    private static int findGameIdFromList(int listIndex, AuthData currentToken) throws IOException {
+        Collection<GameData> games = facade.listGames(currentToken);
+        if(games == null) return -1;
+
+        int i = 1;
+        for(GameData data : games){
+            if(i == listIndex){
+                return data.gameID();
+            }
+            i++;
+        }
+        return -1;
+    }
+
+    private static class CommandResult {
+        boolean isLoggedIn;
+        AuthData authToken;
+        boolean shouldExit;
+
+        CommandResult(boolean isLoggedIn, AuthData authToken, boolean shouldExit) {
+            this.isLoggedIn = isLoggedIn;
+            this.authToken = authToken;
+            this.shouldExit = shouldExit;
         }
     }
 }
