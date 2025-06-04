@@ -304,7 +304,12 @@ public class Main {
                 }
                 JoinGameRequest req = new JoinGameRequest();
                 req.playerColor = line[2];
-                req.gameID = Integer.parseInt(line[1]);
+                try {
+                    req.gameID = Integer.parseInt(line[1]);
+                } catch(Exception e){
+                    System.out.println("Error: Incorrect game number.");
+                    continue;
+                }
 
                 Collection<GameData> games1 = facade.listGames(currentToken);
                 if(games1 == null){continue;}
@@ -320,7 +325,7 @@ public class Main {
                 String result = facade.joinGame(req, currentToken);
 
                 if(result.contains("Error")){
-                    System.out.println("Error: Spot already taken or incorrect game number.");
+                    System.out.println("Error: Spot already taken, incorrect game number, or unrecognizable color.");
                     continue;
                 }
 
@@ -345,8 +350,13 @@ public class Main {
                     System.out.println("Incorrect number of arguments.");
                     continue;
                 }
-
-                int id = Integer.parseInt(line[1]);
+                int id = 0;
+                try {
+                    id = Integer.parseInt(line[1]);
+                } catch(Exception e){
+                    System.out.println("Error: Incorrect game number.");
+                    continue;
+                }
 
                 Collection<GameData> games1 = facade.listGames(currentToken);
                 if(games1 == null){continue;}
