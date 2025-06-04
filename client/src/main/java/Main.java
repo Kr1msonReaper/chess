@@ -147,7 +147,7 @@ public class Main {
     public static String drawWhiteBoard(GameData data){
         String drawnBoard = "";
         String stringifiedBoard = data.game().getBoard().toString();
-        Boolean isWhite = false;
+        Boolean isWhite = true;
         for(int x = 9; x > -1; x--){
             for(int y = 1; y < 9; y++){
                 if(x == 0 || x == 9){
@@ -230,26 +230,27 @@ public class Main {
                             "quit - playing chess\n" +
                             "help - with possible commands");
                 } else {
-                    System.out.println("Register <USERNAME> <PASSWORD> <EMAIL> - to create an account\n" +
-                            "login <USERNAME> <PASSWORD> - to play chess\n" +
-                            "quit - playing chess\n" +
-                            "help - with possible commands\n" +
-                            "logout - log out\n" +
-                            "create <NAME> - create a new game.\n" +
-                            "list - list existing game id's.\n" +
-                            "join <GAME-ID> <DESIRED-COLOR> - join an existing game.\n" +
-                            "observe <GAME-ID> - observe a game in progress.");
+                    System.out.println("quit - playing chess\n" +
+                                       "help - with possible commands\n" +
+                                       "logout - log out\n" +
+                                       "create <NAME> - create a new game.\n" +
+                                       "list - list existing game id's.\n" +
+                                       "join <GAME-ID> <DESIRED-COLOR> - join an existing game.\n" +
+                                       "observe <GAME-ID> - observe a game in progress.");
                 }
             } else if(line[0].contains("register")){
                 if(line.length == 4){
                     try{
                         UserData newUser = new UserData(line[1], line[2], line[3]);
                         currentToken = facade.register(newUser);
+                        if(currentToken.authToken() == null){
+                            Integer.parseInt("abc");
+                        }
                         isLoggedIn = true;
                         currentUser = newUser;
                         System.out.println("Logged in as " + line[1]);
                     } catch(Exception e){
-                        System.out.println("Error: " + e);
+                        System.out.println("Error: Couldn't register, name taken.");
                     }
 
                 } else {
@@ -260,11 +261,14 @@ public class Main {
                     try{
                         UserData newUser = new UserData(line[1], line[2], "");
                         currentToken = facade.login(newUser);
+                        if(currentToken.authToken() == null){
+                            Integer.parseInt("abc");
+                        }
                         isLoggedIn = true;
                         currentUser = newUser;
                         System.out.println("Logged in as " + line[1]);
                     } catch(Exception e){
-                        System.out.println("Error: " + e);
+                        System.out.println("Error: Couldn't log in.");
                     }
                 } else {
                     System.out.println("Error: Incorrect number of arguments.");
@@ -282,20 +286,34 @@ public class Main {
                     System.out.println("Error: " + e);
                 }
             } else if(line[0].contains("create")){
+                if(line.length == 1){
+                    System.out.println("Please specify a game name.");
+                }
                 CreateGameRequest req = new CreateGameRequest();
                 req.gameName = line[1];
                 facade.createGame(currentToken, req);
             } else if(line[0].contains("list")){
                 Collection<GameData> games = facade.listGames(currentToken);
                 if(games == null){continue;}
+                int i = 1;
                 for(GameData data : games){
-                    System.out.println("[" + data.gameID() + "] " + data.gameName());
+                    System.out.println("[" + i + "] " + data.gameName() + " - Players: " + (data.whiteUsername() != null && !data.whiteUsername().isEmpty() ? data.whiteUsername() : "N/A") + " (White) & " + (data.blackUsername() != null && !data.blackUsername().isEmpty() ? data.blackUsername() : "N/A") + " (Black)");
+                    i++;
                 }
             } else if(line[0].contains("join")){
+                if(line.length != 3){
+                    System.out.println("Error: Incorrect number of arguments.");
+                    continue;
+                }
                 JoinGameRequest req = new JoinGameRequest();
                 req.playerColor = line[2];
                 req.gameID = Integer.parseInt(line[1]);
-                facade.joinGame(req, currentToken);
+                String result = facade.joinGame(req, currentToken);
+
+                if(result.contains("Error")){
+                    System.out.println("Error: Spot already taken.");
+                    continue;
+                }
 
                 GameData chosenGame = new GameData(1, "", "", "", new ChessGame());
                 Collection<GameData> games = facade.listGames(currentToken);
@@ -307,11 +325,27 @@ public class Main {
 
                 if(line[2].toLowerCase(Locale.ROOT).equals("white")){
                     drawWhiteBoard(chosenGame);
-                } else {
+                } else if(line[2].toLowerCase(Locale.ROOT).equals("black")){
                     drawBlackBoard(chosenGame);
+                } else {
+                    System.out.println("Incorrect color chosen.");
                 }
             } else if(line[0].contains("observe")){
 
+                if(line.length != 2){
+                    System.out.println("Incorrect number of arguments.");
+                    continue;
+                }
+
+                int id = Integer.parseInt(line[1]);
+                GameData chosenGame = new GameData(1, "", "", "", new ChessGame());
+                Collection<GameData> games = facade.listGames(currentToken);
+                for(GameData game : games){
+                    if (game.gameID() == id){
+                        chosenGame = game;
+                    }
+                }
+                drawWhiteBoard(chosenGame);
             } else {
                 System.out.println("Error: Command not recognized.");
             }

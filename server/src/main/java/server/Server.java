@@ -167,18 +167,18 @@ public class Server {
         GameData game = gameDAO.getGame(joinReq.gameID);
         String color = joinReq.playerColor;
 
-        if (game == null || (!"WHITE".equals(color) && !"BLACK".equals(color))) {
+        if (game == null || (!"white".equalsIgnoreCase(color) && !"black".equalsIgnoreCase(color))) {
             return error(res, 400, "bad request");
         }
 
-        if ("WHITE".equals(color) && !isBlank(game.whiteUsername())) {
+        if ("WHITE".equalsIgnoreCase(color) && !isBlank(game.whiteUsername())) {
             return error(res, 403, "already taken");
         }
-        if ("BLACK".equals(color) && !isBlank(game.blackUsername())) {
+        if ("BLACK".equalsIgnoreCase(color) && !isBlank(game.blackUsername())) {
             return error(res, 403, "already taken");
         }
 
-        GameData updatedGame = "WHITE".equals(color)
+        GameData updatedGame = "WHITE".equalsIgnoreCase(color)
                 ? game.assignWhite(username)
                 : game.assignBlack(username);
         gameDAO.replaceGameData(game, updatedGame);

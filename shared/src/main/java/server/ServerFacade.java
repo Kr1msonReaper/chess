@@ -136,7 +136,7 @@ public class ServerFacade {
         return res.games;
     }
 
-    public void joinGame(JoinGameRequest req, AuthData data) throws IOException {
-        sendPutRequest("/game", GSON.toJson(req), data.authToken());
+    public String joinGame(JoinGameRequest req, AuthData data) throws IOException {
+        return sendPutRequest("/game", GSON.toJson(req), data.authToken());
     }
 }
