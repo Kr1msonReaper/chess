@@ -53,94 +53,24 @@ public class Main {
         return (num >= 1 && num <= 8) ? letters[num] : "";
     }
 
-    public static String drawBlackBoard(GameData data){
-        StringBuilder drawnBoard = new StringBuilder();
-        Boolean isWhite = true;
-
-        for(int x = 0; x < 10; x++){
-            isWhite = drawBlackRow(data, drawnBoard, x, isWhite);
-        }
-
-        String result = drawnBoard.toString();
-        System.out.println(result);
-        return result;
-    }
-
-    private static Boolean drawBlackRow(GameData data, StringBuilder drawnBoard, int x, Boolean isWhite) {
-        for(int y = 8; y > 0; y--){
-            if(x == 0 || x == 9){
-                drawBlackBorder(drawnBoard, y);
-                continue;
-            }
-
-            ChessPiece piece = data.game().getBoard().getPosition(x, y).getPiece();
-            String prettyPiece = getUnicodePiece(piece);
-
-            if(y == 8){
-                drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(" ").append(x).append(" ");
-            }
-
-            isWhite = drawBlackSquare(drawnBoard, piece, prettyPiece, isWhite, y, x);
-        }
-        return isWhite;
-    }
-
-    private static void drawBlackBorder(StringBuilder drawnBoard, int y) {
-        if(y == 8){
-            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
-                    .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
-                    .append("  ");
-        }
-        drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
-                .append(EscapeSequences.SET_TEXT_COLOR_BLACK)
-                .append("♚")
-                .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
-                .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
-                .append(" ")
-                .append(getLetter(y));
-        if(y == 1){
-            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK).append("\n");
-        }
-    }
-
-    private static Boolean drawBlackSquare(StringBuilder drawnBoard, ChessPiece piece, String prettyPiece, Boolean isWhite, int y, int x) {
-        // Set background color
-        if(isWhite){
-            drawnBoard.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
-            isWhite = false;
-        } else {
-            drawnBoard.append(EscapeSequences.SET_BG_COLOR_DARK_GREY);
-            isWhite = true;
-        }
-
-        // Draw piece
-        if(piece == null){
-            drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(prettyPiece);
-        } else {
-            String textColor = piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
-                    EscapeSequences.SET_TEXT_COLOR_WHITE : EscapeSequences.SET_TEXT_COLOR_BLACK;
-            drawnBoard.append(textColor).append(prettyPiece);
-        }
-
-        // End of row handling
-        if(y == 1){
-            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
-                    .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
-                    .append(" ").append(x).append(" ")
-                    .append(EscapeSequences.SET_BG_COLOR_BLACK)
-                    .append("\n");
-            isWhite = !isWhite;
-        }
-
-        return isWhite;
-    }
-
     public static String drawWhiteBoard(GameData data){
+        return drawBoard(data, true);
+    }
+
+    public static String drawBlackBoard(GameData data){
+        return drawBoard(data, false);
+    }
+
+    private static String drawBoard(GameData data, boolean isWhitePerspective) {
         StringBuilder drawnBoard = new StringBuilder();
         Boolean isWhite = true;
 
-        for(int x = 9; x > -1; x--){
-            isWhite = drawWhiteRow(data, drawnBoard, x, isWhite);
+        int startX = isWhitePerspective ? 9 : 0;
+        int endX = isWhitePerspective ? -1 : 10;
+        int xIncrement = isWhitePerspective ? -1 : 1;
+
+        for(int x = startX; x != endX; x += xIncrement){
+            isWhite = drawRow(data, drawnBoard, x, isWhite, isWhitePerspective);
         }
 
         String result = drawnBoard.toString();
@@ -148,27 +78,35 @@ public class Main {
         return result;
     }
 
-    private static Boolean drawWhiteRow(GameData data, StringBuilder drawnBoard, int x, Boolean isWhite) {
-        for(int y = 1; y < 9; y++){
+    private static Boolean drawRow(GameData data, StringBuilder drawnBoard, int x, Boolean isWhite, boolean isWhitePerspective) {
+        int startY = isWhitePerspective ? 1 : 8;
+        int endY = isWhitePerspective ? 9 : 0;
+        int yIncrement = isWhitePerspective ? 1 : -1;
+
+        for(int y = startY; y != endY; y += yIncrement){
             if(x == 0 || x == 9){
-                drawWhiteBorder(drawnBoard, y);
+                drawBorder(drawnBoard, y, isWhitePerspective);
                 continue;
             }
 
             ChessPiece piece = data.game().getBoard().getPosition(x, y).getPiece();
             String prettyPiece = getUnicodePiece(piece);
 
-            if(y == 1){
+            int firstY = isWhitePerspective ? 1 : 8;
+            if(y == firstY){
                 drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(" ").append(x).append(" ");
             }
 
-            isWhite = drawWhiteSquare(drawnBoard, piece, prettyPiece, isWhite, y, x);
+            isWhite = drawSquare(drawnBoard, piece, prettyPiece, isWhite, y, x, isWhitePerspective);
         }
         return isWhite;
     }
 
-    private static void drawWhiteBorder(StringBuilder drawnBoard, int y) {
-        if(y == 1){
+    private static void drawBorder(StringBuilder drawnBoard, int y, boolean isWhitePerspective) {
+        int firstY = isWhitePerspective ? 1 : 8;
+        int lastY = isWhitePerspective ? 8 : 1;
+
+        if(y == firstY){
             drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
                     .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
                     .append("  ");
@@ -180,13 +118,12 @@ public class Main {
                 .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
                 .append(" ")
                 .append(getLetter(y));
-        if(y == 8){
+        if(y == lastY){
             drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK).append("\n");
         }
     }
 
-    private static Boolean drawWhiteSquare(StringBuilder drawnBoard, ChessPiece piece, String prettyPiece, Boolean isWhite, int y, int x) {
-        // Set background color
+    private static Boolean drawSquare(StringBuilder drawnBoard, ChessPiece piece, String prettyPiece, Boolean isWhite, int y, int x, boolean isWhitePerspective) {
         if(isWhite){
             drawnBoard.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
             isWhite = false;
@@ -195,7 +132,6 @@ public class Main {
             isWhite = true;
         }
 
-        // Draw piece
         if(piece == null){
             drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(prettyPiece);
         } else {
@@ -204,8 +140,8 @@ public class Main {
             drawnBoard.append(textColor).append(prettyPiece);
         }
 
-        // End of row handling
-        if(y == 8){
+        int lastY = isWhitePerspective ? 8 : 1;
+        if(y == lastY){
             drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
                     .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
                     .append(" ").append(x).append(" ")
@@ -229,11 +165,10 @@ public class Main {
             String[] line = getInputLine(isLoggedIn);
             processCommand(line, isLoggedIn, currentToken);
 
-            // Update login status and token based on command results
             CommandResult result = executeCommand(line, isLoggedIn, currentToken);
             isLoggedIn = result.isLoggedIn;
             currentToken = result.authToken;
-            if(result.shouldExit) break;
+            if(result.shouldExit) {break;}
         }
     }
 
@@ -248,7 +183,6 @@ public class Main {
     }
 
     private static void processCommand(String[] line, boolean isLoggedIn, AuthData currentToken) {
-        // This method is kept for potential future use or logging
     }
 
     private static CommandResult executeCommand(String[] line, boolean isLoggedIn, AuthData currentToken) throws IOException {
@@ -307,7 +241,7 @@ public class Main {
             UserData newUser = new UserData(line[1], line[2], line[3]);
             AuthData token = facade.register(newUser);
             if(token.authToken() == null){
-                Integer.parseInt("abc"); // Force exception
+                Integer.parseInt("abc");
             }
             System.out.println("Logged in as " + line[1]);
             return new CommandResult(true, token, false);
@@ -327,7 +261,7 @@ public class Main {
             UserData newUser = new UserData(line[1], line[2], "");
             AuthData token = facade.login(newUser);
             if(token.authToken() == null){
-                Integer.parseInt("abc"); // Force exception
+                Integer.parseInt("abc");
             }
             System.out.println("Logged in as " + line[1]);
             return new CommandResult(true, token, false);
@@ -366,7 +300,7 @@ public class Main {
 
     private static void handleListCommand(AuthData currentToken) throws IOException {
         Collection<GameData> games = facade.listGames(currentToken);
-        if(games == null) return;
+        if(games == null) {return;}
 
         int i = 1;
         for(GameData data : games){
@@ -387,7 +321,7 @@ public class Main {
         }
 
         JoinGameRequest req = createJoinRequest(line, currentToken);
-        if(req == null) return;
+        if(req == null) {return;}
 
         String result = facade.joinGame(req, currentToken);
         if(result.contains("Error")){
@@ -410,7 +344,7 @@ public class Main {
         }
 
         Collection<GameData> games = facade.listGames(currentToken);
-        if(games == null) return null;
+        if(games == null) {return null;}
 
         int i = 1;
         for(GameData data : games){
@@ -470,7 +404,7 @@ public class Main {
 
     private static int findGameIdFromList(int listIndex, AuthData currentToken) throws IOException {
         Collection<GameData> games = facade.listGames(currentToken);
-        if(games == null) return -1;
+        if(games == null) {return -1;}
 
         int i = 1;
         for(GameData data : games){
