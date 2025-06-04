@@ -4,7 +4,6 @@ import model.AuthData;
 import model.GameData;
 import model.UserData;
 import server.ServerFacade;
-import server.Server;
 import service.CreateGameRequest;
 import service.JoinGameRequest;
 import ui.EscapeSequences;
@@ -16,7 +15,6 @@ import java.util.Scanner;
 
 public class Main {
     public static ServerFacade facade;
-    public static Server server = new Server();
 
     public static String getUnicodePiece(ChessPiece piece){
         if(piece == null){
@@ -206,8 +204,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        var port = server.run(0);
-        facade = new ServerFacade(port);
+        facade = new ServerFacade(8080);
 
         boolean isLoggedIn = false;
         UserData currentUser;
