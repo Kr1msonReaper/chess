@@ -1,15 +1,75 @@
+import chess.ChessGame;
+import chess.ChessPiece;
 import model.AuthData;
+import model.GameData;
 import model.UserData;
 import server.ServerFacade;
 import server.Server;
+import service.CreateGameRequest;
+import service.JoinGameRequest;
+import ui.EscapeSequences;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Scanner;
 
 public class Main {
     public static ServerFacade facade;
     public static Server server = new Server();
+
+    public static String getUnicodePiece(ChessPiece piece){
+        if(piece.pieceType == ChessPiece.PieceType.PAWN){
+            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return EscapeSequences.WHITE_PAWN;
+            } else {return EscapeSequences.BLACK_PAWN;}
+        }
+        if(piece.pieceType == ChessPiece.PieceType.ROOK){
+            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return EscapeSequences.WHITE_ROOK;
+            } else {return EscapeSequences.BLACK_ROOK;}
+        }
+        if(piece.pieceType == ChessPiece.PieceType.KNIGHT){
+            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return EscapeSequences.WHITE_KNIGHT;
+            } else {return EscapeSequences.BLACK_KNIGHT;}
+        }
+        if(piece.pieceType == ChessPiece.PieceType.BISHOP){
+            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return EscapeSequences.WHITE_BISHOP;
+            } else {return EscapeSequences.BLACK_BISHOP;}
+        }
+        if(piece.pieceType == ChessPiece.PieceType.KING){
+            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return EscapeSequences.WHITE_KING;
+            } else {return EscapeSequences.BLACK_KING;}
+        }
+        if(piece.pieceType == ChessPiece.PieceType.QUEEN){
+            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                return EscapeSequences.WHITE_QUEEN;
+            } else {return EscapeSequences.BLACK_QUEEN;}
+        }
+        return "";
+    }
+
+    public static String drawBlackBoard(GameData data){
+        String drawnBoard = "";
+        String stringifiedBoard = data.game().getBoard().toString();
+
+        for(int x = 1; x < 9; x++){
+            for(int y = 8; y > 0; y--){
+                ChessPiece piece = data.game().getBoard().getPosition(x, y).getPiece();
+                String prettyPiece = getUnicodePiece(piece);
+                if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                    drawnBoard += "\u001b" + EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + prettyPiece;
+                } else {
+                    drawnBoard += "\u001b" + EscapeSequences.SET_BG_COLOR_WHITE + EscapeSequences.SET_TEXT_COLOR_BLACK + prettyPiece;
+                }
+            }
+        }
+        System.out.println(drawnBoard);
+        return drawnBoard;
+    }
 
     public static void main(String[] args) throws IOException {
         var port = server.run(0);
@@ -88,11 +148,34 @@ public class Main {
                     System.out.println("Error: " + e);
                 }
             } else if(line[0].contains("create")){
-
+                CreateGameRequest req = new CreateGameRequest();
+                req.gameName = line[1];
+                facade.createGame(currentToken, req);
             } else if(line[0].contains("list")){
-
+                Collection<GameData> games = facade.listGames(currentToken);
+                if(games == null){continue;}
+                for(GameData data : games){
+                    System.out.println("[" + data.gameID() + "] " + data.gameName());
+                }
             } else if(line[0].contains("join")){
+                JoinGameRequest req = new JoinGameRequest();
+                req.playerColor = line[2];
+                req.gameID = Integer.parseInt(line[1]);
+                facade.joinGame(req, currentToken);
 
+                GameData chosenGame = new GameData(1, "", "", "", new ChessGame());
+                Collection<GameData> games = facade.listGames(currentToken);
+                for(GameData game : games){
+                    if (game.gameID() == req.gameID){
+                        chosenGame = game;
+                    }
+                }
+
+                if(line[2].toLowerCase(Locale.ROOT).equals("white")){
+
+                } else {
+                    drawBlackBoard(chosenGame);
+                }
             } else if(line[0].contains("observe")){
 
             } else {

@@ -28,7 +28,7 @@ public class ServerFacade {
         URL url = new URL(baseUrl + endpoint);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
-        if(!auth.isEmpty()){
+        if(auth != null && !auth.isEmpty()){
             connection.setRequestProperty("Authorization", auth);
         }
 
@@ -40,7 +40,7 @@ public class ServerFacade {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json");
-        if(!auth.isEmpty()){
+        if(auth != null && !auth.isEmpty()){
             connection.setRequestProperty("Authorization", auth);
         }
         connection.setDoOutput(true);
@@ -58,7 +58,7 @@ public class ServerFacade {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("PUT");
         connection.setRequestProperty("Content-Type", "application/json");
-        if(!auth.isEmpty()){
+        if(auth != null && !auth.isEmpty()){
             connection.setRequestProperty("Authorization", auth);
         }
         connection.setDoOutput(true);
@@ -76,7 +76,7 @@ public class ServerFacade {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("DELETE");
         connection.setRequestProperty("Content-Type", "application/json");
-        if(!auth.isEmpty()){
+        if(auth != null && !auth.isEmpty()){
             connection.setRequestProperty("Authorization", auth);
         }
         connection.setDoOutput(true);
