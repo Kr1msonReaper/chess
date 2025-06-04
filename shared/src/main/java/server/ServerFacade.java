@@ -128,7 +128,11 @@ public class ServerFacade {
     }
 
     public int createGame(AuthData data, CreateGameRequest req) throws IOException {
-        return GSON.fromJson(sendPostRequest("/game", GSON.toJson(req), data.authToken()), CreateGameResult.class).gameID;
+        String result = sendPostRequest("/game", GSON.toJson(req), data.authToken());
+        if(result.contains("Error")){
+            return -1;
+        }
+        return GSON.fromJson(result, CreateGameResult.class).gameID;
     }
 
     public Collection<GameData> listGames(AuthData data) throws IOException {
