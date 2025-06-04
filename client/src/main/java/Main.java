@@ -19,6 +19,9 @@ public class Main {
     public static Server server = new Server();
 
     public static String getUnicodePiece(ChessPiece piece){
+        if(piece == null){
+            return EscapeSequences.EMPTY;
+        }
         if(piece.pieceType == ChessPiece.PieceType.PAWN){
             if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
                 return EscapeSequences.WHITE_PAWN;
@@ -49,21 +52,152 @@ public class Main {
                 return EscapeSequences.WHITE_QUEEN;
             } else {return EscapeSequences.BLACK_QUEEN;}
         }
+        return EscapeSequences.EMPTY;
+    }
+
+    public static String getLetter(int num){
+        if(num == 1){
+            return "a";
+        }
+        if(num == 2){
+            return "b";
+        }
+        if(num == 3){
+            return "c";
+        }
+        if(num == 4){
+            return "d";
+        }
+        if(num == 5){
+            return "e";
+        }
+        if(num == 6){
+            return "f";
+        }
+        if(num == 7){
+            return "g";
+        }
+        if(num == 8){
+            return "h";
+        }
         return "";
     }
 
     public static String drawBlackBoard(GameData data){
         String drawnBoard = "";
         String stringifiedBoard = data.game().getBoard().toString();
-
-        for(int x = 1; x < 9; x++){
+        Boolean isWhite = true;
+        for(int x = 0; x < 10; x++){
             for(int y = 8; y > 0; y--){
+                if(x == 0 || x == 9){
+                    if(y == 8){
+                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + "  ";
+                    }
+                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_BLACK
+                            + "♚" + EscapeSequences.SET_TEXT_COLOR_WHITE + EscapeSequences.SET_TEXT_COLOR_WHITE
+                            + " " + getLetter(y);
+                    if(y == 1){
+                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
+                        drawnBoard += "\n";
+                    }
+                    continue;
+                }
                 ChessPiece piece = data.game().getBoard().getPosition(x, y).getPiece();
                 String prettyPiece = getUnicodePiece(piece);
-                if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
-                    drawnBoard += "\u001b" + EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + prettyPiece;
+
+                if(y == 8){
+                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
+                }
+
+                if(isWhite){
+                    drawnBoard += EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
+                    isWhite = false;
                 } else {
-                    drawnBoard += "\u001b" + EscapeSequences.SET_BG_COLOR_WHITE + EscapeSequences.SET_TEXT_COLOR_BLACK + prettyPiece;
+                    drawnBoard += EscapeSequences.SET_BG_COLOR_DARK_GREY;
+                    isWhite = true;
+                }
+
+                if(piece == null){
+                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + prettyPiece;
+                    if(y == 1){
+                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
+                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
+                        drawnBoard += "\n";
+                        isWhite = !isWhite;
+                    }
+                    continue;
+                }
+                if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + prettyPiece;
+                } else {
+                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_BLACK + prettyPiece;
+                }
+                if(y == 1){
+                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
+                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
+                    drawnBoard += "\n";
+                    isWhite = !isWhite;
+                }
+            }
+        }
+        System.out.println(drawnBoard);
+        return drawnBoard;
+    }
+
+    public static String drawWhiteBoard(GameData data){
+        String drawnBoard = "";
+        String stringifiedBoard = data.game().getBoard().toString();
+        Boolean isWhite = false;
+        for(int x = 9; x > -1; x--){
+            for(int y = 1; y < 9; y++){
+                if(x == 0 || x == 9){
+                    if(y == 1){
+                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + "  ";
+                    }
+                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_BLACK
+                            + "♚" + EscapeSequences.SET_TEXT_COLOR_WHITE + EscapeSequences.SET_TEXT_COLOR_WHITE
+                            + " " + getLetter(y);
+                    if(y == 8){
+                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
+                        drawnBoard += "\n";
+                    }
+                    continue;
+                }
+                ChessPiece piece = data.game().getBoard().getPosition(x, y).getPiece();
+                String prettyPiece = getUnicodePiece(piece);
+
+                if(y == 1){
+                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
+                }
+
+                if(isWhite){
+                    drawnBoard += EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
+                    isWhite = false;
+                } else {
+                    drawnBoard += EscapeSequences.SET_BG_COLOR_DARK_GREY;
+                    isWhite = true;
+                }
+
+                if(piece == null){
+                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + prettyPiece;
+                    if(y == 8){
+                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
+                        drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
+                        drawnBoard += "\n";
+                        isWhite = !isWhite;
+                    }
+                    continue;
+                }
+                if(piece.getTeamColor() == ChessGame.TeamColor.WHITE){
+                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_WHITE + prettyPiece;
+                } else {
+                    drawnBoard += EscapeSequences.SET_TEXT_COLOR_BLACK + prettyPiece;
+                }
+                if(y == 8){
+                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK + EscapeSequences.SET_TEXT_COLOR_WHITE + " " + x + " ";
+                    drawnBoard += EscapeSequences.SET_BG_COLOR_BLACK;
+                    drawnBoard += "\n";
+                    isWhite = !isWhite;
                 }
             }
         }
@@ -172,7 +306,7 @@ public class Main {
                 }
 
                 if(line[2].toLowerCase(Locale.ROOT).equals("white")){
-
+                    drawWhiteBoard(chosenGame);
                 } else {
                     drawBlackBoard(chosenGame);
                 }
