@@ -308,10 +308,22 @@ public class Main {
                 JoinGameRequest req = new JoinGameRequest();
                 req.playerColor = line[2];
                 req.gameID = Integer.parseInt(line[1]);
+
+                Collection<GameData> games1 = facade.listGames(currentToken);
+                if(games1 == null){continue;}
+                int i = 1;
+                for(GameData data : games1){
+                    if(i == req.gameID){
+                        req.gameID = data.gameID();
+                        break;
+                    }
+                    i++;
+                }
+
                 String result = facade.joinGame(req, currentToken);
 
                 if(result.contains("Error")){
-                    System.out.println("Error: Spot already taken.");
+                    System.out.println("Error: Spot already taken or incorrect game number.");
                     continue;
                 }
 
@@ -338,6 +350,18 @@ public class Main {
                 }
 
                 int id = Integer.parseInt(line[1]);
+
+                Collection<GameData> games1 = facade.listGames(currentToken);
+                if(games1 == null){continue;}
+                int i = 1;
+                for(GameData data : games1){
+                    if(i == id){
+                        id = data.gameID();
+                        break;
+                    }
+                    i++;
+                }
+
                 GameData chosenGame = new GameData(1, "", "", "", new ChessGame());
                 Collection<GameData> games = facade.listGames(currentToken);
                 for(GameData game : games){
