@@ -361,12 +361,19 @@ public class Main {
                 Collection<GameData> games1 = facade.listGames(currentToken);
                 if(games1 == null){continue;}
                 int i = 1;
+                Boolean foundGame = false;
                 for(GameData data : games1){
                     if(i == id){
                         id = data.gameID();
+                        foundGame = true;
                         break;
                     }
                     i++;
+                }
+
+                if(!foundGame){
+                    System.out.println("Game does not exist.");
+                    continue;
                 }
 
                 GameData chosenGame = new GameData(1, "", "", "", new ChessGame());
