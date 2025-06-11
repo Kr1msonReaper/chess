@@ -1,5 +1,7 @@
 import chess.ChessGame;
+import chess.ChessMove;
 import chess.ChessPiece;
+import chess.ChessPosition;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -9,6 +11,7 @@ import service.JoinGameRequest;
 import ui.EscapeSequences;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Scanner;
@@ -53,15 +56,15 @@ public class Main {
         return (num >= 1 && num <= 8) ? letters[num] : "";
     }
 
-    public static String drawWhiteBoard(GameData data){
-        return drawBoard(data, true);
+    public static String drawWhiteBoard(GameData data, Collection<ChessMove> possibleMoves){
+        return drawBoard(data, true, possibleMoves);
     }
 
-    public static String drawBlackBoard(GameData data){
-        return drawBoard(data, false);
+    public static String drawBlackBoard(GameData data, Collection<ChessMove> possibleMoves){
+        return drawBoard(data, false, possibleMoves);
     }
 
-    private static String drawBoard(GameData data, boolean isWhitePerspective) {
+    private static String drawBoard(GameData data, boolean isWhitePerspective, Collection<ChessMove> possibleMoves) {
         StringBuilder drawnBoard = new StringBuilder();
         Boolean isWhite = true;
 
@@ -70,7 +73,7 @@ public class Main {
         int xIncrement = isWhitePerspective ? -1 : 1;
 
         for(int x = startX; x != endX; x += xIncrement){
-            isWhite = drawRow(data, drawnBoard, x, isWhite, isWhitePerspective);
+            isWhite = drawRow(data, drawnBoard, x, isWhite, isWhitePerspective, possibleMoves);
         }
 
         String result = drawnBoard.toString();
@@ -78,7 +81,7 @@ public class Main {
         return result;
     }
 
-    private static Boolean drawRow(GameData data, StringBuilder drawnBoard, int x, Boolean isWhite, boolean isWhitePerspective) {
+    private static Boolean drawRow(GameData data, StringBuilder drawnBoard, int x, Boolean isWhite, boolean isWhitePerspective, Collection<ChessMove> possibleMoves) {
         int startY = isWhitePerspective ? 1 : 8;
         int endY = isWhitePerspective ? 9 : 0;
         int yIncrement = isWhitePerspective ? 1 : -1;
@@ -97,7 +100,7 @@ public class Main {
                 drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(" ").append(x).append(" ");
             }
 
-            isWhite = drawSquare(drawnBoard, piece, prettyPiece, isWhite, y, x, isWhitePerspective);
+            isWhite = drawSquare(drawnBoard, piece, prettyPiece, isWhite, y, x, isWhitePerspective, possibleMoves);
         }
         return isWhite;
     }
@@ -124,12 +127,19 @@ public class Main {
     }
 
     private static Boolean drawSquare(StringBuilder drawnBoard, ChessPiece piece, String prettyPiece,
-                                      Boolean isWhite, int y, int x, boolean isWhitePerspective) {
+                                      Boolean isWhite, int y, int x, boolean isWhitePerspective, Collection<ChessMove> possibleMoves) {
+        boolean isListed = false;
+        for(ChessMove pos : possibleMoves){
+            if(pos.getEndPosition().x == x && pos.getEndPosition().y == y
+            || pos.getStartPosition().x == x && pos.getStartPosition().y == y){
+                isListed = true;
+            }
+        }
         if(isWhite){
-            drawnBoard.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+            if(!isListed) {drawnBoard.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);}else{drawnBoard.append(EscapeSequences.SET_BG_COLOR_YELLOW);}
             isWhite = false;
         } else {
-            drawnBoard.append(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+            if(!isListed) {drawnBoard.append(EscapeSequences.SET_BG_COLOR_DARK_GREY);}else{drawnBoard.append(EscapeSequences.SET_BG_COLOR_YELLOW);}
             isWhite = true;
         }
 
@@ -217,7 +227,7 @@ public class Main {
         } else if(line[0].contains("observe")) {
             handleObserveCommand(line, currentToken);
         } else if(line[0].contains("redraw") && line[1].contains("chess") && line[2].contains("board")){
-            redrawBoard(currentToken);
+            redrawBoard(currentToken, new ArrayList<>(), -1, -1);
         } else if(line[0].contains("leave")){
 
         } else if(line[0].contains("make") && line[1].contains("move")){
@@ -225,7 +235,7 @@ public class Main {
         } else if(line[0].contains("resign")){
 
         } else if(line[0].contains("highlight") && line[1].contains("legal") && line[2].contains("moves")){
-
+            redrawBoard(currentToken, new ArrayList<>(), 2, 5);
         } else {
             System.out.println("Error: Command not recognized.");
         }
@@ -238,9 +248,9 @@ public class Main {
             System.out.println("help - discover what actions you can take.\n" +
                     "redraw chess board - view the current board.\n" +
                     "leave - leave the game.\n" +
-                    "make move - move a piece.\n" +
+                    "make move <1-8> <a-h> to <1-8> <a-h> - move a piece.\n" +
                     "resign - forfeit the game.\n" +
-                    "highlight legal moves - view possible moves.\n" +
+                    "highlight legal moves <1-8> <a-h> - view possible moves.\n" +
                     "help - with possible commands");
             return;
         }
@@ -343,16 +353,37 @@ public class Main {
         }
     }
 
-    private static void redrawBoard(AuthData currentToken) throws IOException {
+    private static void redrawBoard(AuthData currentToken, Collection<ChessMove> possibleMoves, int x, int y) throws IOException {
         Collection<GameData> games = facade.listGames(currentToken);
+        Collection<ChessMove> filteredMoves = new ArrayList<>();
 
         for(GameData game : games){
             if(game.blackUsername() != null && game.blackUsername().equals(currentToken.username())){
-                drawBlackBoard(game);
+                game.game().getPossibleMoves(ChessGame.TeamColor.BLACK);
+                for(ChessMove move : game.game().possibleMoves){
+                    if(x == -1 && y == -1){
+                        break;
+                    }
+                    if(move.getStartPosition().x == x && move.getStartPosition().y == y){
+                        filteredMoves.add(move);
+                    }
+                }
+
+                drawBlackBoard(game, filteredMoves);
                 break;
             }
             if(game.whiteUsername() != null && game.whiteUsername().equals(currentToken.username())){
-                drawWhiteBoard(game);
+                game.game().getPossibleMoves(ChessGame.TeamColor.WHITE);
+                for(ChessMove move : game.game().possibleMoves){
+                    if(x == -1 && y == -1){
+                        break;
+                    }
+                    if(move.getStartPosition().x == x && move.getStartPosition().y == y){
+                        filteredMoves.add(move);
+                    }
+                }
+
+                drawWhiteBoard(game, filteredMoves);
                 break;
             }
         }
@@ -415,9 +446,9 @@ public class Main {
     private static void displayGameBoard(String color, GameData chosenGame) {
         String lowerColor = color.toLowerCase(Locale.ROOT);
         if(lowerColor.equals("white")){
-            drawWhiteBoard(chosenGame);
+            drawWhiteBoard(chosenGame, new ArrayList<>());
         } else if(lowerColor.equals("black")){
-            drawBlackBoard(chosenGame);
+            drawBlackBoard(chosenGame, new ArrayList<>());
         } else {
             System.out.println("Incorrect color chosen.");
         }
@@ -444,7 +475,7 @@ public class Main {
         }
 
         GameData chosenGame = findGameById(gameId, currentToken);
-        drawWhiteBoard(chosenGame);
+        drawWhiteBoard(chosenGame, new ArrayList<>());
     }
 
     private static int findGameIdFromList(int listIndex, AuthData currentToken) throws IOException {
