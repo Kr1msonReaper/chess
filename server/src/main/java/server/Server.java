@@ -12,6 +12,8 @@ import service.JoinGameRequest;
 import service.ListGamesResult;
 import spark.*;
 
+import static spark.Spark.webSocket;
+
 public class Server {
 
     public static AuthDAO authDAO;
@@ -25,7 +27,7 @@ public class Server {
         Spark.port(desiredPort);
         Spark.staticFiles.location("web");
 
-
+        webSocket("/connect", GameWebSocketHandler.class);
 
         authDAO = new SQLAuthDAO();
         gameDAO = new SQLGameDAO();

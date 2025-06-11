@@ -11,10 +11,7 @@ import service.JoinGameRequest;
 import ui.EscapeSequences;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     public static ServerFacade facade;
@@ -54,6 +51,12 @@ public class Main {
     public static String getLetter(int num){
         String[] letters = {"", "a", "b", "c", "d", "e", "f", "g", "h"};
         return (num >= 1 && num <= 8) ? letters[num] : "";
+    }
+
+    public static int getNumber(String letter){
+        List<String> letters = new ArrayList<>();
+        letters.addAll(Arrays.asList("", "a", "b", "c", "d", "e", "f", "g", "h"));
+        return letters.indexOf(letter);
     }
 
     public static String drawWhiteBoard(GameData data, Collection<ChessMove> possibleMoves){
@@ -235,7 +238,7 @@ public class Main {
         } else if(line[0].contains("resign")){
 
         } else if(line[0].contains("highlight") && line[1].contains("legal") && line[2].contains("moves")){
-            redrawBoard(currentToken, new ArrayList<>(), 2, 5);
+            redrawBoard(currentToken, new ArrayList<>(), Integer.parseInt(line[3]), getNumber(line[4]));
         } else {
             System.out.println("Error: Command not recognized.");
         }
