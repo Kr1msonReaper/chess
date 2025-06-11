@@ -168,10 +168,16 @@ public class Main {
             processCommand(line, isLoggedIn, currentToken);
 
             CommandResult result = executeCommand(line, isLoggedIn, isInGame, currentToken);
-            isLoggedIn = result.isLoggedIn;
-            isInGame = result.isInGame;
-            currentToken = result.authToken;
-            if(result.shouldExit) {break;}
+            try {
+                isLoggedIn = result.isLoggedIn;
+                isInGame = result.isInGame;
+                currentToken = result.authToken;
+                if (result.shouldExit) {
+                    break;
+                }
+            } catch(Exception e){
+
+            }
         }
     }
 
@@ -341,11 +347,11 @@ public class Main {
         Collection<GameData> games = facade.listGames(currentToken);
 
         for(GameData game : games){
-            if(game.blackUsername().equals(currentToken.username())){
+            if(game.blackUsername() != null && game.blackUsername().equals(currentToken.username())){
                 drawBlackBoard(game);
                 break;
             }
-            if(game.whiteUsername().equals(currentToken.username())){
+            if(game.whiteUsername() != null && game.whiteUsername().equals(currentToken.username())){
                 drawWhiteBoard(game);
                 break;
             }
