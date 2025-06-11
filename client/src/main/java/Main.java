@@ -157,6 +157,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         facade = new ServerFacade(8080);
         boolean isLoggedIn = false;
+        boolean isInGame = false;
         UserData currentUser;
         AuthData currentToken = new AuthData("", "");
 
@@ -166,8 +167,9 @@ public class Main {
             String[] line = getInputLine(isLoggedIn);
             processCommand(line, isLoggedIn, currentToken);
 
-            CommandResult result = executeCommand(line, isLoggedIn, currentToken);
+            CommandResult result = executeCommand(line, isLoggedIn, isInGame, currentToken);
             isLoggedIn = result.isLoggedIn;
+            isInGame = result.isInGame;
             currentToken = result.authToken;
             if(result.shouldExit) {break;}
         }
@@ -186,11 +188,11 @@ public class Main {
     private static void processCommand(String[] line, boolean isLoggedIn, AuthData currentToken) {
     }
 
-    private static CommandResult executeCommand(String[] line, boolean isLoggedIn, AuthData currentToken) throws IOException {
-        CommandResult result = new CommandResult(isLoggedIn, currentToken, false);
+    private static CommandResult executeCommand(String[] line, boolean isLoggedIn, boolean isInGame, AuthData currentToken) throws IOException {
+        CommandResult result = new CommandResult(isLoggedIn, isInGame, currentToken, false);
 
         if(line[0].contains("help")){
-            handleHelpCommand(isLoggedIn);
+            handleHelpCommand(isLoggedIn, isInGame);
         } else if(line[0].contains("register")){
             result = handleRegisterCommand(line);
         } else if(line[0].contains("login")){
@@ -205,9 +207,19 @@ public class Main {
         } else if(line[0].contains("list")){
             handleListCommand(currentToken);
         } else if(line[0].contains("join")){
-            handleJoinCommand(line, currentToken);
-        } else if(line[0].contains("observe")){
+            result = handleJoinCommand(line, currentToken);
+        } else if(line[0].contains("observe")) {
             handleObserveCommand(line, currentToken);
+        } else if(line[0].contains("redraw") && line[1].contains("chess") && line[2].contains("board")){
+            redrawBoard(currentToken);
+        } else if(line[0].contains("leave")){
+
+        } else if(line[0].contains("make") && line[1].contains("move")){
+
+        } else if(line[0].contains("resign")){
+
+        } else if(line[0].contains("highlight") && line[1].contains("legal") && line[2].contains("moves")){
+
         } else {
             System.out.println("Error: Command not recognized.");
         }
@@ -215,7 +227,17 @@ public class Main {
         return result;
     }
 
-    private static void handleHelpCommand(boolean isLoggedIn) {
+    private static void handleHelpCommand(boolean isLoggedIn, boolean isInGame) {
+        if(isInGame){
+            System.out.println("help - discover what actions you can take.\n" +
+                    "redraw chess board - view the current board.\n" +
+                    "leave - leave the game.\n" +
+                    "make move - move a piece.\n" +
+                    "resign - forfeit the game.\n" +
+                    "highlight legal moves - view possible moves.\n" +
+                    "help - with possible commands");
+            return;
+        }
         if(!isLoggedIn){
             System.out.println("Register <USERNAME> <PASSWORD> <EMAIL> - to create an account\n" +
                     "login <USERNAME> <PASSWORD> - to play chess\n" +
@@ -235,7 +257,7 @@ public class Main {
     private static CommandResult handleRegisterCommand(String[] line) {
         if(line.length != 4){
             System.out.println("Error: Incorrect number of arguments.");
-            return new CommandResult(false, new AuthData("", ""), false);
+            return new CommandResult(false, false, new AuthData("", ""), false);
         }
 
         try{
@@ -245,17 +267,17 @@ public class Main {
                 Integer.parseInt("abc");
             }
             System.out.println("Logged in as " + line[1]);
-            return new CommandResult(true, token, false);
+            return new CommandResult(true, false, token, false);
         } catch(Exception e){
             System.out.println("Error: Couldn't register, name taken.");
-            return new CommandResult(false, new AuthData("", ""), false);
+            return new CommandResult(false, false, new AuthData("", ""), false);
         }
     }
 
     private static CommandResult handleLoginCommand(String[] line) {
         if(line.length != 3){
             System.out.println("Error: Incorrect number of arguments.");
-            return new CommandResult(false, new AuthData("", ""), false);
+            return new CommandResult(false, false, new AuthData("", ""), false);
         }
 
         try{
@@ -265,10 +287,10 @@ public class Main {
                 Integer.parseInt("abc");
             }
             System.out.println("Logged in as " + line[1]);
-            return new CommandResult(true, token, false);
+            return new CommandResult(true, false, token, false);
         } catch(Exception e){
             System.out.println("Error: Couldn't log in.");
-            return new CommandResult(false, new AuthData("", ""), false);
+            return new CommandResult(false, false, new AuthData("", ""), false);
         }
     }
 
@@ -282,10 +304,10 @@ public class Main {
         try{
             facade.logout(currentToken);
             System.out.println("Logged out");
-            return new CommandResult(false, new AuthData("", ""), false);
+            return new CommandResult(false, false, new AuthData("", ""), false);
         } catch(Exception e){
             System.out.println("Error: " + e);
-            return new CommandResult(true, currentToken, false);
+            return new CommandResult(true, false, currentToken, false);
         }
     }
 
@@ -315,23 +337,39 @@ public class Main {
         }
     }
 
-    private static void handleJoinCommand(String[] line, AuthData currentToken) throws IOException {
+    private static void redrawBoard(AuthData currentToken) throws IOException {
+        Collection<GameData> games = facade.listGames(currentToken);
+
+        for(GameData game : games){
+            if(game.blackUsername().equals(currentToken.username())){
+                drawBlackBoard(game);
+                break;
+            }
+            if(game.whiteUsername().equals(currentToken.username())){
+                drawWhiteBoard(game);
+                break;
+            }
+        }
+    }
+
+    private static CommandResult handleJoinCommand(String[] line, AuthData currentToken) throws IOException {
         if(line.length != 3){
             System.out.println("Error: Incorrect number of arguments.");
-            return;
+            return null;
         }
 
         JoinGameRequest req = createJoinRequest(line, currentToken);
-        if(req == null) {return;}
+        if(req == null) {return null;}
 
         String result = facade.joinGame(req, currentToken);
         if(result.contains("Error")){
             System.out.println("Error: Spot already taken, incorrect game number, or unrecognizable color.");
-            return;
+            return null;
         }
 
         GameData chosenGame = findGameById(req.gameID, currentToken);
         displayGameBoard(line[2], chosenGame);
+        return new CommandResult(true, true, currentToken, false);
     }
 
     private static JoinGameRequest createJoinRequest(String[] line, AuthData currentToken) throws IOException {
@@ -419,11 +457,13 @@ public class Main {
 
     private static class CommandResult {
         boolean isLoggedIn;
+        boolean isInGame;
         AuthData authToken;
         boolean shouldExit;
 
-        CommandResult(boolean isLoggedIn, AuthData authToken, boolean shouldExit) {
+        CommandResult(boolean isLoggedIn, boolean isInGame, AuthData authToken, boolean shouldExit) {
             this.isLoggedIn = isLoggedIn;
+            this.isInGame = isInGame;
             this.authToken = authToken;
             this.shouldExit = shouldExit;
         }
