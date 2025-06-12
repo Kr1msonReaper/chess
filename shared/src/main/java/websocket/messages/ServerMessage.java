@@ -13,10 +13,10 @@ import java.util.Objects;
  */
 public class ServerMessage {
     ServerMessageType serverMessageType;
-    public String message = "";
-    public String errorMessage = "";
-    public GameData game;
-    public AuthData auth;
+    public String message = null;
+    public String errorMessage = null;
+    public GameData game = null;
+    public AuthData auth = null;
 
     public enum ServerMessageType {
         LOAD_GAME,

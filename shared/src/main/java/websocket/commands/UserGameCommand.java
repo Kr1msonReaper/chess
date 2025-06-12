@@ -25,6 +25,9 @@ public class UserGameCommand {
         this.commandType = commandType;
         this.authToken = authToken;
         this.gameID = gameID;
+        if(authToken != null){
+
+        }
     }
 
     public UserGameCommand(CommandType commandType, String authToken, Integer gameID, String message) {

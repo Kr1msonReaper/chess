@@ -37,37 +37,13 @@ public class WebsocketClientHandler {
 
     @OnMessage
     public void onMessage(String message) throws IOException {
-        JsonObject messageJson = JsonParser.parseString(message).getAsJsonObject();
+        ServerMessage serverMessage = GSON.fromJson(message, ServerMessage.class);
 
-        // 1. Extract ServerMessage fields
-        ServerMessage.ServerMessageType type = ServerMessage.ServerMessageType.valueOf(
-                messageJson.get("serverMessageType").getAsString()
-        );
-
-        // 2. Reconstruct the ServerMessage object
-        ServerMessage serverMessage = new ServerMessage(type);
-
-        // 3. Extract and deserialize the "game" field (if present)
-        GameData game = null;
-        if (messageJson.has("game") && !messageJson.get("game").isJsonNull()) {
-            game = GSON.fromJson(messageJson.get("game"), GameData.class);
+        if(serverMessage.getServerMessageType() == ServerMessage.ServerMessageType.NOTIFICATION){
+            System.out.println("\n" + serverMessage.message);
         }
-
-        AuthData auth = null;
-        if (messageJson.has("auth") && !messageJson.get("auth").isJsonNull()) {
-            auth = GSON.fromJson(messageJson.get("auth"), AuthData.class);
-        }
-
-        String text = null;
-        if (messageJson.has("message") && !messageJson.get("message").isJsonNull()) {
-            text = GSON.fromJson(messageJson.get("message"), String.class);
-        }
-
-        if(type == ServerMessage.ServerMessageType.NOTIFICATION){
-            System.out.println("\n" + text);
-        }
-        if(type == ServerMessage.ServerMessageType.LOAD_GAME){
-            loadGame(serverMessage, game, auth);
+        if(serverMessage.getServerMessageType() == ServerMessage.ServerMessageType.LOAD_GAME){
+            loadGame(serverMessage, serverMessage.game, serverMessage.auth);
         }
     }
 
