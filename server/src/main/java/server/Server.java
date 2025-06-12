@@ -201,6 +201,7 @@ public class Server {
         userDAO.removeAll();
         authDAO.removeAll();
         gameDAO.deleteAll();
+        ServerWebSocketHandler.clearMap();
         return success(res, 200);
     }
 
