@@ -1,8 +1,9 @@
 package server;
 
 public class PlayerInfo {
-    private String authToken;
-    private String role; // "player" or "observer"
+    public String authToken;
+    public String role; // "player" or "observer"
+    public boolean hasResigned = false;
 
     public PlayerInfo(String authToken, String role) {
         this.authToken = authToken;

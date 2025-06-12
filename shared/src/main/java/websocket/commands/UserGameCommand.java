@@ -19,15 +19,12 @@ public class UserGameCommand {
     private final Integer gameID;
 
     public ChessMove move;
-    public String message = "";
+    public String message = null;
 
     public UserGameCommand(CommandType commandType, String authToken, Integer gameID) {
         this.commandType = commandType;
         this.authToken = authToken;
         this.gameID = gameID;
-        if(authToken != null){
-
-        }
     }
 
     public UserGameCommand(CommandType commandType, String authToken, Integer gameID, String message) {
