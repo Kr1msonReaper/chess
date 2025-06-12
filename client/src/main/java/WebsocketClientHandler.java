@@ -30,6 +30,9 @@ public class WebsocketClientHandler {
     @OnMessage
     public void onMessage(String message) {
         ServerMessage serverMessage = GSON.fromJson(message, ServerMessage.class);
+        if(serverMessage.getServerMessageType() == ServerMessage.ServerMessageType.NOTIFICATION){
+            System.out.println("\n" + serverMessage.message);
+        }
     }
 
     @OnClose

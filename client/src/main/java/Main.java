@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
+import org.eclipse.jetty.server.Authentication;
 import server.ServerFacade;
 import javax.websocket.*;
 import service.CreateGameRequest;
@@ -220,9 +221,9 @@ public class Main {
 
         if(line[0].contains("help")){
             handleHelpCommand(isLoggedIn, isInGame);
-        } else if(line[0].contains("register")){
+        } else if(line[0].contains("register") && !isInGame){
             result = handleRegisterCommand(line);
-        } else if(line[0].contains("login")){
+        } else if(line[0].contains("login") && !isInGame){
             result = handleLoginCommand(line);
         } else if(line[0].contains("quit")){
             handleQuitCommand(currentToken);
@@ -233,9 +234,9 @@ public class Main {
             handleCreateCommand(line, currentToken);
         } else if(line[0].contains("list") && isLoggedIn){
             handleListCommand(currentToken);
-        } else if(line[0].contains("join") && isLoggedIn){
+        } else if(line[0].contains("join") && isLoggedIn && !isInGame){
             result = handleJoinCommand(line, currentToken);
-        } else if(line[0].contains("observe") && isLoggedIn) {
+        } else if(line[0].contains("observe") && isLoggedIn && !isInGame) {
             handleObserveCommand(line, currentToken);
         } else if(line[0].contains("redraw") && line[1].contains("chess") && line[2].contains("board") && isInGame){
             redrawBoard(currentToken, new ArrayList<>(), -1, -1);
@@ -310,6 +311,7 @@ public class Main {
                 Integer.parseInt("abc");
             }
             System.out.println("Logged in as " + line[1]);
+            socket.sendMessage("Identification:" + token.authToken());
             return new CommandResult(true, false, token, false);
         } catch(Exception e){
             System.out.println("Error: Couldn't register, name taken.");
@@ -330,6 +332,7 @@ public class Main {
                 Integer.parseInt("abc");
             }
             System.out.println("Logged in as " + line[1]);
+            socket.sendMessage("Identification:" + token.authToken());
             return new CommandResult(true, false, token, false);
         } catch(Exception e){
             System.out.println("Error: Couldn't log in.");
@@ -433,7 +436,14 @@ public class Main {
 
         GameData chosenGame = findGameById(req.gameID, currentToken);
         displayGameBoard(line[2], chosenGame);
+        socket.sendMessage("AssignGame:" + req.gameID);
+        sendJoinMessage(currentToken.authToken(), req.gameID, "");
         return new CommandResult(true, true, currentToken, false);
+    }
+
+    private static void sendJoinMessage(String currentToken, Integer gameID, String message){
+        UserGameCommand newCmd = new UserGameCommand(UserGameCommand.CommandType.CONNECT, currentToken, gameID, message);
+        socket.sendMessage(GSON.toJson(newCmd, UserGameCommand.class));
     }
 
     private static JoinGameRequest createJoinRequest(String[] line, AuthData currentToken) throws IOException {
@@ -502,6 +512,8 @@ public class Main {
         }
 
         GameData chosenGame = findGameById(gameId, currentToken);
+        socket.sendMessage("AssignGame:" + gameId);
+        sendJoinMessage(currentToken.authToken(), gameId, "observer");
         drawWhiteBoard(chosenGame, new ArrayList<>());
     }
 
