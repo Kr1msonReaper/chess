@@ -1,20 +1,21 @@
 import chess.ChessGame;
 import chess.ChessMove;
 import chess.ChessPiece;
-import chess.ChessPosition;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
 import server.ServerFacade;
+import javax.websocket.*;
 import service.CreateGameRequest;
 import service.JoinGameRequest;
 import ui.EscapeSequences;
-
 import java.io.IOException;
+import java.net.URI;
 import java.util.*;
 
 public class Main {
     public static ServerFacade facade;
+    public static WebSocketContainer socket;
 
     public static String getUnicodePiece(ChessPiece piece){
         if(piece == null){
@@ -167,8 +168,10 @@ public class Main {
         return isWhite;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, DeploymentException {
         facade = new ServerFacade(8080);
+        socket = ContainerProvider.getWebSocketContainer();
+        socket.connectToServer(WebsocketClientHandler.class, URI.create("ws://localhost:8080/ws"));
         boolean isLoggedIn = false;
         boolean isInGame = false;
         UserData currentUser;

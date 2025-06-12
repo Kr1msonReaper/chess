@@ -27,7 +27,7 @@ public class Server {
         Spark.port(desiredPort);
         Spark.staticFiles.location("web");
 
-        webSocket("/connect", GameWebSocketHandler.class);
+        webSocket("/ws", GameWebSocketHandler.class);
 
         authDAO = new SQLAuthDAO();
         gameDAO = new SQLGameDAO();
