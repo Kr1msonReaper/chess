@@ -1,6 +1,7 @@
 import chess.ChessGame;
 import chess.ChessMove;
 import chess.ChessPiece;
+import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -9,13 +10,16 @@ import javax.websocket.*;
 import service.CreateGameRequest;
 import service.JoinGameRequest;
 import ui.EscapeSequences;
+import websocket.commands.UserGameCommand;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
 public class Main {
     public static ServerFacade facade;
-    public static WebSocketContainer socket;
+    public static WebsocketClientHandler socket;
+    public static final Gson GSON = new Gson();
 
     public static String getUnicodePiece(ChessPiece piece){
         if(piece == null){
@@ -170,8 +174,9 @@ public class Main {
 
     public static void main(String[] args) throws IOException, DeploymentException {
         facade = new ServerFacade(8080);
-        socket = ContainerProvider.getWebSocketContainer();
-        socket.connectToServer(WebsocketClientHandler.class, URI.create("ws://localhost:8080/ws"));
+        WebSocketContainer socketContainer = ContainerProvider.getWebSocketContainer();
+        socket = new WebsocketClientHandler();
+        socketContainer.connectToServer(socket, URI.create("ws://localhost:8080/ws"));
         boolean isLoggedIn = false;
         boolean isInGame = false;
         UserData currentUser;
@@ -222,31 +227,47 @@ public class Main {
         } else if(line[0].contains("quit")){
             handleQuitCommand(currentToken);
             result.shouldExit = true;
-        } else if(line[0].contains("logout")){
+        } else if(line[0].contains("logout") && isLoggedIn){
             result = handleLogoutCommand(currentToken);
-        } else if(line[0].contains("create")){
+        } else if(line[0].contains("create") && isLoggedIn){
             handleCreateCommand(line, currentToken);
-        } else if(line[0].contains("list")){
+        } else if(line[0].contains("list") && isLoggedIn){
             handleListCommand(currentToken);
-        } else if(line[0].contains("join")){
+        } else if(line[0].contains("join") && isLoggedIn){
             result = handleJoinCommand(line, currentToken);
-        } else if(line[0].contains("observe")) {
+        } else if(line[0].contains("observe") && isLoggedIn) {
             handleObserveCommand(line, currentToken);
-        } else if(line[0].contains("redraw") && line[1].contains("chess") && line[2].contains("board")){
+        } else if(line[0].contains("redraw") && line[1].contains("chess") && line[2].contains("board") && isInGame){
             redrawBoard(currentToken, new ArrayList<>(), -1, -1);
-        } else if(line[0].contains("leave")){
+        } else if(line[0].contains("leave") && isInGame){
+            handleLeaveCommand(currentToken);
+        } else if(line[0].contains("make") && line[1].contains("move") && isInGame){
 
-        } else if(line[0].contains("make") && line[1].contains("move")){
+        } else if(line[0].contains("resign") && isInGame){
 
-        } else if(line[0].contains("resign")){
-
-        } else if(line[0].contains("highlight") && line[1].contains("legal") && line[2].contains("moves")){
+        } else if(line[0].contains("highlight") && line[1].contains("legal") && line[2].contains("moves") && isInGame){
             redrawBoard(currentToken, new ArrayList<>(), Integer.parseInt(line[3]), getNumber(line[4]));
         } else {
             System.out.println("Error: Command not recognized.");
         }
 
         return result;
+    }
+
+    private static void handleLeaveCommand(AuthData token) throws IOException {
+        Collection<GameData> games = facade.listGames(token);
+        Integer gameID = -1;
+        for(GameData game : games){
+            if(game.blackUsername() != null && game.blackUsername().equals(token.username())){
+                gameID = game.gameID();
+            }
+            if(game.whiteUsername() != null && game.whiteUsername().equals(token.username())){
+                gameID = game.gameID();
+            }
+        }
+
+        UserGameCommand newMsg = new UserGameCommand(UserGameCommand.CommandType.LEAVE, token.authToken(), gameID);
+        socket.sendMessage(GSON.toJson(newMsg));
     }
 
     private static void handleHelpCommand(boolean isLoggedIn, boolean isInGame) {
