@@ -1,5 +1,7 @@
 package server;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import dataaccess.DataAccessException;
 import model.AuthData;
 import model.GameData;
@@ -45,20 +47,20 @@ public class ServerWebSocketHandler {
         if(clientMessage.getCommandType() == UserGameCommand.CommandType.LEAVE){
             AuthData authData = Server.authDAO.getAuth(clientMessage.getAuthToken());
             String notif = authData.username() + " has left the game.";
-            ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, notif);
-            sendEveryoneElse(session, GSON.toJson(sendBack, ServerMessage.class), clientMessage.getGameID());
+            ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+            sendEveryoneElse(session, sendBack, notif, clientMessage.getGameID());
         }
         if(clientMessage.getCommandType() == UserGameCommand.CommandType.CONNECT){
             AuthData authData = Server.authDAO.getAuth(clientMessage.getAuthToken());
             String notif = "";
-            if(!clientMessage.message.contains("observer")){
+            if(clientMessage.message == null || !clientMessage.message.contains("observer")){
                 notif = authData.username() + " has joined the game as " + getPlayerColor(authData) + ".";
             } else {
                 notif = authData.username() + " has joined the game as an observer.";
             }
-
-            ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION, notif);
-            sendEveryoneElse(session, GSON.toJson(sendBack, ServerMessage.class), clientMessage.getGameID());
+            ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+            sendEveryoneElse(session, sendBack, notif, clientMessage.getGameID());
+            loadGame(session, Server.authDAO.getAuth(clientMessage.getAuthToken()), clientMessage.getGameID());
         }
 
         //session.getRemote().sendString("template");
@@ -88,7 +90,27 @@ public class ServerWebSocketHandler {
         return "";
     }
 
-    public void sendEveryoneElse(Session senderSession, String message, int gameID){
+    public void loadGame(Session senderSession, AuthData auth, int gameId) throws DataAccessException {
+        ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        GameData game = Server.gameDAO.getGame(gameId);
+        sendBack.game = game;
+        sendBack.auth = auth;
+        sendBack.message = null;
+
+        if (senderSession.isOpen()) {
+            try {
+                senderSession.getRemote().sendString(GSON.toJson(sendBack, ServerMessage.class));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void sendEveryoneElse(Session senderSession, ServerMessage message, String text, int gameID){
+        message.game = null;
+        message.auth = null;
+        message.message = text != null ? text : null;
+
         for (Map.Entry<ConcurrentHashMap<Session, String>, Integer> entry : organizedSessions.entrySet()) {
             if (entry.getValue() == gameID) {
                 ConcurrentHashMap<Session, String> sessionMap = entry.getKey();
@@ -96,7 +118,7 @@ public class ServerWebSocketHandler {
                 for (Session session : sessionMap.keySet()) {
                     if (session.isOpen() && !session.equals(senderSession)) {
                         try {
-                            session.getRemote().sendString(message);
+                            session.getRemote().sendString(GSON.toJson(message, ServerMessage.class));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

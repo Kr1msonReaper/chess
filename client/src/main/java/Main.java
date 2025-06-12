@@ -21,6 +21,8 @@ public class Main {
     public static ServerFacade facade;
     public static WebsocketClientHandler socket;
     public static final Gson GSON = new Gson();
+    public static Main instance;
+    public AuthData currentAuth;
 
     public static String getUnicodePiece(ChessPiece piece){
         if(piece == null){
@@ -184,7 +186,6 @@ public class Main {
         AuthData currentToken = new AuthData("", "");
 
         System.out.println("♕ 240 Chess Client. Type \'Help\' to get started.");
-
         while(true){
             String[] line = getInputLine(isLoggedIn);
             processCommand(line, isLoggedIn, currentToken);
@@ -239,7 +240,7 @@ public class Main {
         } else if(line[0].contains("observe") && isLoggedIn && !isInGame) {
             handleObserveCommand(line, currentToken);
         } else if(line[0].contains("redraw") && line[1].contains("chess") && line[2].contains("board") && isInGame){
-            redrawBoard(currentToken, new ArrayList<>(), -1, -1);
+            redrawBoard(currentToken, null, -1, -1);
         } else if(line[0].contains("leave") && isInGame){
             handleLeaveCommand(currentToken);
         } else if(line[0].contains("make") && line[1].contains("move") && isInGame){
@@ -247,7 +248,7 @@ public class Main {
         } else if(line[0].contains("resign") && isInGame){
 
         } else if(line[0].contains("highlight") && line[1].contains("legal") && line[2].contains("moves") && isInGame){
-            redrawBoard(currentToken, new ArrayList<>(), Integer.parseInt(line[3]), getNumber(line[4]));
+            redrawBoard(currentToken, null, Integer.parseInt(line[3]), getNumber(line[4]));
         } else {
             System.out.println("Error: Command not recognized.");
         }
@@ -383,11 +384,14 @@ public class Main {
         }
     }
 
-    private static void redrawBoard(AuthData currentToken, Collection<ChessMove> possibleMoves, int x, int y) throws IOException {
+    public static void redrawBoard(AuthData currentToken, GameData passedGame, int x, int y) throws IOException {
         Collection<GameData> games = facade.listGames(currentToken);
         Collection<ChessMove> filteredMoves = new ArrayList<>();
 
         for(GameData game : games){
+            if(passedGame != null){
+                game = passedGame;
+            }
             if(game.blackUsername() != null && game.blackUsername().equals(currentToken.username())){
                 game.game().getPossibleMoves(ChessGame.TeamColor.BLACK);
                 for(ChessMove move : game.game().possibleMoves){
