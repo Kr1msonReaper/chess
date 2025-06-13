@@ -1,6 +1,7 @@
 import chess.ChessGame;
 import chess.ChessMove;
 import chess.ChessPiece;
+import chess.ChessPosition;
 import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
@@ -267,8 +268,16 @@ public class Main {
                 gameID = game.gameID();
             }
         }
-        int x1 =
+        int x1 = Integer.parseInt(line[2]);
+        int y1 = getNumber(line[3]);
+        int x2 = Integer.parseInt(line[4]);
+        int y2 = getNumber(line[5]);
+        ChessPosition start = new ChessPosition(x1, y1);
+        ChessPosition end = new ChessPosition(x2, y2);
+        ChessMove newMove = new ChessMove(start, end, null);
         UserGameCommand newMessage = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, token.authToken(), gameID);
+        newMessage.move = newMove;
+        socket.sendMessage(GSON.toJson(newMessage, UserGameCommand.class));
     }
 
     private static CommandResult handleLeaveCommand(AuthData token) throws IOException {

@@ -1,4 +1,7 @@
 package server;
+import chess.ChessGame;
+import chess.ChessPosition;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -34,7 +37,7 @@ public class ServerWebSocketHandler {
     }
 
     @OnWebSocketMessage
-    public void onMessage(Session session, String message) throws IOException, DataAccessException {
+    public void onMessage(Session session, String message) throws IOException, DataAccessException, InvalidMoveException {
         if(message.equals("ping")){
             return;
         }
@@ -72,8 +75,63 @@ public class ServerWebSocketHandler {
         //session.getRemote().sendString("template");
     }
 
-    private void handleMakeMove(Session session, UserGameCommand clientMessage){
+    private void handleMakeMove(Session session, UserGameCommand clientMessage) throws DataAccessException, InvalidMoveException {
+        GameData game = Server.gameDAO.getGame(clientMessage.getGameID());
+        AuthData dt = Server.authDAO.getAuth(clientMessage.getAuthToken());
+        if(dt == null){
+            sendError(session);
+            return;
+        }
+        if(getRole(clientMessage.getAuthToken(), clientMessage.getGameID()).equals("observer")){
+            sendError(session);
+            return;
+        }
+        if(!(game.game().getTeamTurn().equals(ChessGame.TeamColor.WHITE) ? game.whiteUsername() : game.blackUsername()).equals(Server.authDAO.getAuth(clientMessage.getAuthToken()).username())){
+            sendError(session);
+            return;
+        }
+        if(hasAnyoneResigned(clientMessage.getGameID())){
+            sendError(session);
+            return;
+        }
+        if(game.game().whiteInCheckmate || game.game().blackInCheckmate){
+            sendError(session);
+            return;
+        }
+        try{
+            game.game().makeMove(clientMessage.move);
+        } catch(Exception e){
+            sendError(session);
+            return;
+        }
+        List<Session> gameSessions = getSessionsByGameId(clientMessage.getGameID());
+        loadGames(gameSessions, dt, clientMessage.getGameID());
+        ServerMessage newMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+        ChessPosition start = clientMessage.move.getStartPosition();
+        ChessPosition end = clientMessage.move.getEndPosition();
+        newMessage.message = "\n" + dt.username() + " moved a piece from " + start.x + " " + getLetter(start.y) + " to " + end.x + " " + getLetter(end.y);
+        sendEveryoneElse(session, newMessage, newMessage.message, clientMessage.getGameID());
+        ServerMessage newerMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+        if(game.game().blackInCheckmate){
+            newerMessage.message = "\n" + game.blackUsername() + " is in checkmate!";
+        }
+        if(game.game().whiteInCheckmate){
+            newerMessage.message = "\n" + game.whiteUsername() + " is in checkmate!";
+        }
+        if(game.game().whiteInCheck && !game.game().whiteInCheckmate){
+            newerMessage.message = "\n" + game.whiteUsername() + " is in check!";
+        }
+        if(game.game().blackInCheck && !game.game().blackInCheckmate){
+            newerMessage.message = "\n" + game.blackUsername() + " is in check!";
+        }
+        if(newerMessage.message != null) {
+            sendEveryoneElse(session, newerMessage, newerMessage.message, clientMessage.getGameID());
+        }
+    }
 
+    public static String getLetter(int num){
+        String[] letters = {"", "a", "b", "c", "d", "e", "f", "g", "h"};
+        return (num >= 1 && num <= 8) ? letters[num] : "";
     }
 
     public void assignIdForSession(Session senderSession, String ID) {
@@ -232,6 +290,24 @@ public class ServerWebSocketHandler {
                 senderSession.getRemote().sendString(GSON.toJson(sendBack, ServerMessage.class));
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    public void loadGames(List<Session> senderSessions, AuthData auth, int gameId) throws DataAccessException {
+        ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        GameData game = Server.gameDAO.getGame(gameId);
+        sendBack.game = game;
+        sendBack.auth = auth;
+        sendBack.message = null;
+
+        for(Session senderSession : senderSessions){
+            if (senderSession.isOpen()) {
+                try {
+                    senderSession.getRemote().sendString(GSON.toJson(sendBack, ServerMessage.class));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -410,5 +486,19 @@ public class ServerWebSocketHandler {
                 break;
             }
         }
+    }
+
+
+    public List<Session> getSessionsByGameId(int gameId) {
+        List<Session> sessions = new ArrayList<>();
+
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+            if (entry.getValue() == gameId) {
+                sessions.addAll(entry.getKey().keySet());
+                break;
+            }
+        }
+
+        return sessions;
     }
 }
