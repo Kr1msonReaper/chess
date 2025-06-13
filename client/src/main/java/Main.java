@@ -259,16 +259,7 @@ public class Main {
     }
 
     private static void handleMakeMove(String[] line, AuthData token) throws IOException {
-        Collection<GameData> games = facade.listGames(token);
-        Integer gameID = -1;
-        for(GameData game : games){
-            if(game.blackUsername() != null && game.blackUsername().equals(token.username())){
-                gameID = game.gameID();
-            }
-            if(game.whiteUsername() != null && game.whiteUsername().equals(token.username())){
-                gameID = game.gameID();
-            }
-        }
+        Integer gameID = gettingGameID(token);
         int x1 = Integer.parseInt(line[2]);
         int y1 = getNumber(line[3]);
         int x2 = Integer.parseInt(line[4]);
@@ -281,7 +272,7 @@ public class Main {
         socket.sendMessage(GSON.toJson(newMessage, UserGameCommand.class));
     }
 
-    private static CommandResult handleLeaveCommand(AuthData token) throws IOException {
+    private static Integer gettingGameID(AuthData token) throws IOException {
         Collection<GameData> games = facade.listGames(token);
         Integer gameID = -1;
         for(GameData game : games){
@@ -292,6 +283,11 @@ public class Main {
                 gameID = game.gameID();
             }
         }
+        return gameID;
+    }
+
+    private static CommandResult handleLeaveCommand(AuthData token) throws IOException {
+        Integer gameID = gettingGameID(token);
 
         UserGameCommand newMsg = new UserGameCommand(UserGameCommand.CommandType.LEAVE, token.authToken(), gameID);
         socket.sendMessage(GSON.toJson(newMsg));
