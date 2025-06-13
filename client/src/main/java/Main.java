@@ -6,33 +6,27 @@ import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
-
 import javax.websocket.*;
-
 import service.CreateGameRequest;
 import service.JoinGameRequest;
 import shared.ServerFacade;
 import ui.EscapeSequences;
 import websocket.commands.UserGameCommand;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
-
 public class Main {
     public static ServerFacade facade;
     public static WebsocketClientHandler socket;
     public static final Gson GSON = new Gson();
     public static Main instance;
     public AuthData currentAuth;
-
     public static String getUnicodePiece(ChessPiece piece){
         if(piece == null){
             return EscapeSequences.EMPTY;
         }
         return getPieceByType(piece);
     }
-
     private static String getPieceByType(ChessPiece piece) {
         switch(piece.pieceType) {
             case PAWN:
@@ -57,30 +51,24 @@ public class Main {
                 return EscapeSequences.EMPTY;
         }
     }
-
     public static String getLetter(int num){
         String[] letters = {"", "a", "b", "c", "d", "e", "f", "g", "h"};
         return (num >= 1 && num <= 8) ? letters[num] : "";
     }
-
     public static int getNumber(String letter){
         List<String> letters = new ArrayList<>();
         letters.addAll(Arrays.asList("", "a", "b", "c", "d", "e", "f", "g", "h"));
         return letters.indexOf(letter);
     }
-
     public static String drawWhiteBoard(GameData data, Collection<ChessMove> possibleMoves){
         return drawBoard(data, true, possibleMoves);
     }
-
     public static String drawBlackBoard(GameData data, Collection<ChessMove> possibleMoves){
         return drawBoard(data, false, possibleMoves);
     }
-
     private static String drawBoard(GameData data, boolean isWhitePerspective, Collection<ChessMove> possibleMoves) {
         StringBuilder drawnBoard = new StringBuilder();
         Boolean isWhite = true;
-
         int startX = isWhitePerspective ? 9 : 0;
         int endX = isWhitePerspective ? -1 : 10;
         int xIncrement = isWhitePerspective ? -1 : 1;
@@ -88,95 +76,79 @@ public class Main {
         for(int x = startX; x != endX; x += xIncrement){
             isWhite = drawRow(data, drawnBoard, x, isWhite, isWhitePerspective, possibleMoves);
         }
-
         String result = drawnBoard.toString();
         System.out.println(result);
         return result;
     }
-
-    private static Boolean drawRow(GameData data, StringBuilder drawnBoard, int x, Boolean isWhite, boolean isWhitePerspective, Collection<ChessMove> possibleMoves) {
-        int startY = isWhitePerspective ? 1 : 8;
-        int endY = isWhitePerspective ? 9 : 0;
-        int yIncrement = isWhitePerspective ? 1 : -1;
+    private static Boolean drawRow(GameData data, StringBuilder board, int x, Boolean isWhite, boolean isWhite2, Collection<ChessMove> moves) {
+        int startY = isWhite2 ? 1 : 8;
+        int endY = isWhite2 ? 9 : 0;
+        int yIncrement = isWhite2 ? 1 : -1;
 
         for(int y = startY; y != endY; y += yIncrement){
             if(x == 0 || x == 9){
-                drawBorder(drawnBoard, y, isWhitePerspective);
+                drawBorder(board, y, isWhite2);
                 continue;
             }
-
             ChessPiece piece = data.game().getBoard().getPosition(x, y).getPiece();
             String prettyPiece = getUnicodePiece(piece);
-
-            int firstY = isWhitePerspective ? 1 : 8;
+            int firstY = isWhite2 ? 1 : 8;
             if(y == firstY){
-                drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(" ").append(x).append(" ");
+                board.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(" ").append(x).append(" ");
             }
-
-            isWhite = drawSquare(drawnBoard, piece, prettyPiece, isWhite, y, x, isWhitePerspective, possibleMoves);
+            isWhite = drawSquare(board, piece, prettyPiece, isWhite, y, x, isWhite2, moves);
         }
         return isWhite;
     }
-
-    private static void drawBorder(StringBuilder drawnBoard, int y, boolean isWhitePerspective) {
-        int firstY = isWhitePerspective ? 1 : 8;
-        int lastY = isWhitePerspective ? 8 : 1;
-
+    private static void drawBorder(StringBuilder board, int y, boolean isWhite2) {
+        int firstY = isWhite2 ? 1 : 8;
+        int lastY = isWhite2 ? 8 : 1;
         if(y == firstY){
-            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
-                    .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
-                    .append("  ");
+            board.append(EscapeSequences.SET_BG_COLOR_BLACK).append(EscapeSequences.SET_TEXT_COLOR_WHITE).append("  ");
         }
-        drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
-                .append(EscapeSequences.SET_TEXT_COLOR_BLACK)
-                .append("♚")
-                .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
-                .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
-                .append(" ")
-                .append(getLetter(y));
+        board.append(EscapeSequences.SET_BG_COLOR_BLACK).append(EscapeSequences.SET_TEXT_COLOR_BLACK).append("♚")
+                .append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(EscapeSequences.SET_TEXT_COLOR_WHITE)
+                .append(" ").append(getLetter(y));
         if(y == lastY){
-            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK).append("\n");
+            board.append(EscapeSequences.SET_BG_COLOR_BLACK).append("\n");
         }
     }
-
-    private static Boolean drawSquare(StringBuilder drawnBoard, ChessPiece piece, String prettyPiece,
-                                      Boolean isWhite, int y, int x, boolean isWhitePerspective, Collection<ChessMove> possibleMoves) {
+    private static Boolean drawSquare(StringBuilder board, ChessPiece piece, String prettyPiece, Boolean isWhite, int y, int x, boolean isWhite2, Collection<ChessMove> moves) {
         boolean isListed = false;
-        for(ChessMove pos : possibleMoves){
-            if(pos.getEndPosition().x == x && pos.getEndPosition().y == y
-            || pos.getStartPosition().x == x && pos.getStartPosition().y == y){
+        for(ChessMove pos : moves){
+            if(pos.getEndPosition().x == x && pos.getEndPosition().y == y || pos.getStartPosition().x == x && pos.getStartPosition().y == y){
                 isListed = true;
             }
         }
         if(isWhite){
-            if(!isListed) {drawnBoard.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);}else{drawnBoard.append(EscapeSequences.SET_BG_COLOR_YELLOW);}
+            if(!isListed) {
+                board.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+            } else {
+                board.append(EscapeSequences.SET_BG_COLOR_YELLOW);
+            }
             isWhite = false;
         } else {
-            if(!isListed) {drawnBoard.append(EscapeSequences.SET_BG_COLOR_DARK_GREY);}else{drawnBoard.append(EscapeSequences.SET_BG_COLOR_YELLOW);}
+            if(!isListed) {
+                board.append(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+            } else {
+                board.append(EscapeSequences.SET_BG_COLOR_YELLOW);
+            }
             isWhite = true;
         }
-
         if(piece == null){
-            drawnBoard.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(prettyPiece);
+            board.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(prettyPiece);
         } else {
-            String textColor = piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
-                    EscapeSequences.SET_TEXT_COLOR_WHITE : EscapeSequences.SET_TEXT_COLOR_BLACK;
-            drawnBoard.append(textColor).append(prettyPiece);
+            String textColor = piece.getTeamColor() == ChessGame.TeamColor.WHITE ? EscapeSequences.SET_TEXT_COLOR_WHITE : EscapeSequences.SET_TEXT_COLOR_BLACK;
+            board.append(textColor).append(prettyPiece);
         }
-
-        int lastY = isWhitePerspective ? 8 : 1;
+        int lastY = isWhite2 ? 8 : 1;
         if(y == lastY){
-            drawnBoard.append(EscapeSequences.SET_BG_COLOR_BLACK)
-                    .append(EscapeSequences.SET_TEXT_COLOR_WHITE)
-                    .append(" ").append(x).append(" ")
-                    .append(EscapeSequences.SET_BG_COLOR_BLACK)
-                    .append("\n");
+            board.append(EscapeSequences.SET_BG_COLOR_BLACK).append(EscapeSequences.SET_TEXT_COLOR_WHITE)
+                    .append(" ").append(x).append(" ").append(EscapeSequences.SET_BG_COLOR_BLACK).append("\n");
             isWhite = !isWhite;
         }
-
         return isWhite;
     }
-
     public static void main(String[] args) throws IOException, DeploymentException {
         facade = new ServerFacade(8080);
         WebSocketContainer socketContainer = ContainerProvider.getWebSocketContainer();
@@ -190,8 +162,6 @@ public class Main {
         System.out.println("♕ 240 Chess Client. Type \'Help\' to get started.");
         while(true){
             String[] line = getInputLine(isLoggedIn);
-            processCommand(line, isLoggedIn, currentToken);
-
             CommandResult result = executeCommand(line, isLoggedIn, isInGame, currentToken);
             try {
                 isLoggedIn = result.isLoggedIn;
@@ -201,7 +171,6 @@ public class Main {
                     break;
                 }
             } catch(Exception e){
-
             }
         }
     }
@@ -215,13 +184,8 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         return scanner.nextLine().toLowerCase(Locale.ROOT).split(" ");
     }
-
-    private static void processCommand(String[] line, boolean isLoggedIn, AuthData currentToken) {
-    }
-
     private static CommandResult executeCommand(String[] line, boolean isLoggedIn, boolean isInGame, AuthData currentToken) throws IOException {
         CommandResult result = new CommandResult(isLoggedIn, isInGame, currentToken, false);
-
         if(line[0].contains("help")){
             handleHelpCommand(isLoggedIn, isInGame);
         } else if(line[0].contains("register") && !isInGame){
@@ -254,10 +218,8 @@ public class Main {
         } else {
             System.out.println("Error: Command not recognized.");
         }
-
         return result;
     }
-
     private static void handleMakeMove(String[] line, AuthData token) throws IOException {
         Integer gameID = gettingGameID(token);
         int x1 = Integer.parseInt(line[2]);
@@ -271,7 +233,6 @@ public class Main {
         newMessage.move = newMove;
         socket.sendMessage(GSON.toJson(newMessage, UserGameCommand.class));
     }
-
     private static Integer gettingGameID(AuthData token) throws IOException {
         Collection<GameData> games = facade.listGames(token);
         Integer gameID = -1;
@@ -285,49 +246,28 @@ public class Main {
         }
         return gameID;
     }
-
     private static CommandResult handleLeaveCommand(AuthData token) throws IOException {
         Integer gameID = gettingGameID(token);
-
         UserGameCommand newMsg = new UserGameCommand(UserGameCommand.CommandType.LEAVE, token.authToken(), gameID);
         socket.sendMessage(GSON.toJson(newMsg));
-        CommandResult result = new CommandResult(true, false, token, false);
-        return result;
+        return new CommandResult(true, false, token, false);
     }
-
     private static void handleHelpCommand(boolean isLoggedIn, boolean isInGame) {
         if(isInGame){
-            System.out.println("help - discover what actions you can take.\n" +
-                    "redraw chess board - view the current board.\n" +
-                    "leave - leave the game.\n" +
-                    "make move <1-8> <a-h> to <1-8> <a-h> - move a piece.\n" +
-                    "resign - forfeit the game.\n" +
-                    "highlight legal moves <1-8> <a-h> - view possible moves.\n" +
-                    "help - with possible commands");
+            System.out.println("help - discover what actions you can take.\nredraw chess board - view the current board.\nleave - leave the game.\nmake move <1-8> <a-h> to <1-8> <a-h> - move a piece.\nresign - forfeit the game.\nhighlight legal moves <1-8> <a-h> - view possible moves.\nhelp - with possible commands");
             return;
         }
         if(!isLoggedIn){
-            System.out.println("Register <USERNAME> <PASSWORD> <EMAIL> - to create an account\n" +
-                    "login <USERNAME> <PASSWORD> - to play chess\n" +
-                    "quit - playing chess\n" +
-                    "help - with possible commands");
+            System.out.println("Register <USERNAME> <PASSWORD> <EMAIL> - to create an account\nlogin <USERNAME> <PASSWORD> - to play chess\nquit - playing chess\nhelp - with possible commands");
         } else {
-            System.out.println("quit - playing chess\n" +
-                    "help - with possible commands\n" +
-                    "logout - log out\n" +
-                    "create <NAME> - create a new game.\n" +
-                    "list - list existing game id's.\n" +
-                    "join <GAME-ID> <DESIRED-COLOR> - join an existing game.\n" +
-                    "observe <GAME-ID> - observe a game in progress.");
+            System.out.println("quit - playing chess\nhelp - with possible commands\nlogout - log out\ncreate <NAME> - create a new game.\nlist - list existing game id's.\njoin <GAME-ID> <DESIRED-COLOR> - join an existing game.\nobserve <GAME-ID> - observe a game in progress.");
         }
     }
-
     private static CommandResult handleRegisterCommand(String[] line) {
         if(line.length != 4){
             System.out.println("Error: Incorrect number of arguments.");
             return new CommandResult(false, false, new AuthData("", ""), false);
         }
-
         try{
             UserData newUser = new UserData(line[1], line[2], line[3]);
             AuthData token = facade.register(newUser);
@@ -342,13 +282,11 @@ public class Main {
             return new CommandResult(false, false, new AuthData("", ""), false);
         }
     }
-
     private static CommandResult handleLoginCommand(String[] line) {
         if(line.length != 3){
             System.out.println("Error: Incorrect number of arguments.");
             return new CommandResult(false, false, new AuthData("", ""), false);
         }
-
         try{
             UserData newUser = new UserData(line[1], line[2], "");
             AuthData token = facade.login(newUser);
@@ -363,13 +301,11 @@ public class Main {
             return new CommandResult(false, false, new AuthData("", ""), false);
         }
     }
-
     private static void handleQuitCommand(AuthData currentToken) throws IOException {
         facade.logout(currentToken);
         System.out.println("Logged out");
         System.exit(0);
     }
-
     private static CommandResult handleLogoutCommand(AuthData currentToken) {
         try{
             facade.logout(currentToken);
@@ -380,7 +316,6 @@ public class Main {
             return new CommandResult(true, false, currentToken, false);
         }
     }
-
     private static void handleCreateCommand(String[] line, AuthData currentToken) throws IOException {
         if(line.length == 1){
             System.out.println("Please specify a game name.");
@@ -390,27 +325,22 @@ public class Main {
         req.gameName = line[1];
         facade.createGame(currentToken, req);
     }
-
     private static void handleListCommand(AuthData currentToken) throws IOException {
         Collection<GameData> games = facade.listGames(currentToken);
-        if(games == null) {return;}
-
+        if(games == null) {
+            return;
+        }
         int i = 1;
         for(GameData data : games){
-            String whiteName = (data.whiteUsername() != null && !data.whiteUsername().isEmpty()) ?
-                    data.whiteUsername() : "N/A";
-            String blackName = (data.blackUsername() != null && !data.blackUsername().isEmpty()) ?
-                    data.blackUsername() : "N/A";
-            System.out.println("[" + i + "] " + data.gameName() + " - Players: " +
-                    whiteName + " (White) & " + blackName + " (Black)");
+            String whiteName = (data.whiteUsername() != null && !data.whiteUsername().isEmpty()) ? data.whiteUsername() : "N/A";
+            String blackName = (data.blackUsername() != null && !data.blackUsername().isEmpty()) ? data.blackUsername() : "N/A";
+            System.out.println("[" + i + "] " + data.gameName() + " - Players: " + whiteName + " (White) & " + blackName + " (Black)");
             i++;
         }
     }
-
     public static void redrawBoard(AuthData currentToken, GameData passedGame, int x, int y) throws IOException {
         Collection<GameData> games = facade.listGames(currentToken);
         Collection<ChessMove> filteredMoves = new ArrayList<>();
-
         for(GameData game : games){
             if(passedGame != null){
                 game = passedGame;
@@ -425,7 +355,6 @@ public class Main {
                         filteredMoves.add(move);
                     }
                 }
-
                 drawBlackBoard(game, filteredMoves);
                 break;
             }
@@ -439,41 +368,34 @@ public class Main {
                         filteredMoves.add(move);
                     }
                 }
-
                 drawWhiteBoard(game, filteredMoves);
                 break;
             }
         }
     }
-
     private static CommandResult handleJoinCommand(String[] line, AuthData currentToken) throws IOException {
         if(line.length != 3){
             System.out.println("Error: Incorrect number of arguments.");
             return null;
         }
-
         JoinGameRequest req = createJoinRequest(line, currentToken);
-        if(req == null) {return null;}
-
+        if(req == null) {
+            return null;
+        }
         String result = facade.joinGame(req, currentToken);
         if(result.contains("Error")){
             System.out.println("Error: Spot already taken, incorrect game number, or unrecognizable color.");
             return null;
         }
-
         GameData chosenGame = findGameById(req.gameID, currentToken);
-        //displayGameBoard(line[2], chosenGame);
         socket.sendMessage("AssignGame:" + req.gameID);
         sendJoinMessage(currentToken.authToken(), req.gameID, "");
-        //System.out.println(currentToken.authToken());
         return new CommandResult(true, true, currentToken, false);
     }
-
     private static void sendJoinMessage(String currentToken, Integer gameID, String message){
         UserGameCommand newCmd = new UserGameCommand(UserGameCommand.CommandType.CONNECT, currentToken, gameID, message);
         socket.sendMessage(GSON.toJson(newCmd, UserGameCommand.class));
     }
-
     private static JoinGameRequest createJoinRequest(String[] line, AuthData currentToken) throws IOException {
         JoinGameRequest req = new JoinGameRequest();
         req.playerColor = line[2];
@@ -483,10 +405,10 @@ public class Main {
             System.out.println("Error: Incorrect game number.");
             return null;
         }
-
         Collection<GameData> games = facade.listGames(currentToken);
-        if(games == null) {return null;}
-
+        if(games == null) {
+            return null;
+        }
         int i = 1;
         for(GameData data : games){
             if(i == req.gameID){
@@ -507,13 +429,11 @@ public class Main {
         }
         return new GameData(1, "", "", "", new ChessGame());
     }
-
     private static void handleObserveCommand(String[] line, AuthData currentToken) throws IOException {
         if(line.length != 2){
             System.out.println("Incorrect number of arguments.");
             return;
         }
-
         int id = 0;
         try {
             id = Integer.parseInt(line[1]);
@@ -521,23 +441,20 @@ public class Main {
             System.out.println("Error: Incorrect game number.");
             return;
         }
-
         int gameId = findGameIdFromList(id, currentToken);
         if(gameId == -1){
             System.out.println("Game does not exist.");
             return;
         }
-
         GameData chosenGame = findGameById(gameId, currentToken);
         socket.sendMessage("AssignGame:" + gameId);
         sendJoinMessage(currentToken.authToken(), gameId, "observer");
-        //drawWhiteBoard(chosenGame, new ArrayList<>());
     }
-
     private static int findGameIdFromList(int listIndex, AuthData currentToken) throws IOException {
         Collection<GameData> games = facade.listGames(currentToken);
-        if(games == null) {return -1;}
-
+        if(games == null) {
+            return -1;
+        }
         int i = 1;
         for(GameData data : games){
             if(i == listIndex){
@@ -547,13 +464,11 @@ public class Main {
         }
         return -1;
     }
-
     private static class CommandResult {
         boolean isLoggedIn;
         boolean isInGame;
         AuthData authToken;
         boolean shouldExit;
-
         CommandResult(boolean isLoggedIn, boolean isInGame, AuthData authToken, boolean shouldExit) {
             this.isLoggedIn = isLoggedIn;
             this.isInGame = isInGame;

@@ -394,16 +394,6 @@ public class ServerWebSocketHandler {
                 .findFirst();
     }
 
-    public String getAuthTokenBySession(Session session) {
-        return ORGANIZED_SESSIONS.keySet().stream()
-                .filter(map -> map.containsKey(session))
-                .map(map -> map.get(session))
-                .filter(info -> info != null)
-                .map(PlayerInfo::getAuthToken)
-                .findFirst()
-                .orElse(null);
-    }
-
     public void updatePlayerInfo(Session session, String role, String token, boolean hasResigned) {
         for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : ORGANIZED_SESSIONS.keySet()) {
             if (sessionMap.containsKey(session)) {
