@@ -346,8 +346,17 @@ public class Main {
         }
     }
     public static void redrawBoard(AuthData currentToken, GameData passedGame, int x, int y) throws IOException {
-        Collection<GameData> games = facade.listGames(currentToken);
+        Collection<GameData> games = new ArrayList<>();
+        try {
+            facade.listGames(currentToken);
+        } catch(Exception e){
+
+        }
         Collection<ChessMove> filteredMoves = new ArrayList<>();
+        if(games.size() == 0){
+            games.add(new GameData(999, "placeholder",
+                    "placeholder", "placeholder", new ChessGame()));
+        }
         for(GameData game : games){
             if(passedGame != null){
                 game = passedGame;
@@ -365,7 +374,9 @@ public class Main {
                 drawBlackBoard(game, filteredMoves);
                 break;
             }
-            if(game.whiteUsername() != null && game.whiteUsername().equals(currentToken.username())){
+            if((game.whiteUsername() != null
+                    && game.whiteUsername().equals(currentToken.username()))
+                    || currentToken.authToken().contains("observer")){
                 game.game().getPossibleMoves(ChessGame.TeamColor.WHITE);
                 for(ChessMove move : game.game().possibleMoves){
                     if(x == -1 && y == -1){
