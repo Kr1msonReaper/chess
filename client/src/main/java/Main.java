@@ -348,12 +348,12 @@ public class Main {
     public static void redrawBoard(AuthData currentToken, GameData passedGame, int x, int y) throws IOException {
         Collection<GameData> games = new ArrayList<>();
         try {
-            facade.listGames(currentToken);
+            games = facade.listGames(currentToken);
         } catch(Exception e){
 
         }
         Collection<ChessMove> filteredMoves = new ArrayList<>();
-        if(games.size() == 0){
+        if(games != null && games.size() == 0){
             games.add(new GameData(999, "placeholder",
                     "placeholder", "placeholder", new ChessGame()));
         }

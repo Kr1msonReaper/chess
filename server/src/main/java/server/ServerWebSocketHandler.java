@@ -1,6 +1,7 @@
 package server;
 
 import chess.ChessGame;
+import chess.ChessMove;
 import chess.ChessPosition;
 import chess.InvalidMoveException;
 import com.google.gson.Gson;
@@ -138,18 +139,23 @@ public class ServerWebSocketHandler {
     private void notifyCheckmate(Session session, GameData game, int gameID) {
         String checkmateMsg = null;
         if (game.game().blackInCheck) {
-            checkmateMsg = "\n" + game.blackUsername() + " is in checkmate!";
-            System.out.println("\n" + game.blackUsername() + " is in check!");
+            checkmateMsg = "\n" + game.blackUsername() + " is in check!";
+            game.game().getPossibleMoves(ChessGame.TeamColor.BLACK);
+            Collection<ChessMove> moves = game.game().possibleMoves;
+            //System.out.println("\n" + game.blackUsername() + " is in check!");
         }
         if (game.game().whiteInCheck) {
-            checkmateMsg = "\n" + game.whiteUsername() + " is in checkmate!";
+            checkmateMsg = "\n" + game.whiteUsername() + " is in check!";
+            game.game().getPossibleMoves(ChessGame.TeamColor.WHITE);
+            Collection<ChessMove> moves = game.game().possibleMoves;
             //System.out.println("\n" + game.whiteUsername() + " is in check!");
         }
-        if (game.game().blackInCheckmate) {
+
+        if (game.game().blackInCheck && game.game().possibleMoves.isEmpty()) {
             checkmateMsg = "\n" + game.blackUsername() + " is in checkmate!";
             //System.out.println("\n" + game.blackUsername() + " is in checkmate!");
         }
-        if (game.game().whiteInCheckmate) {
+        if (game.game().whiteInCheck && game.game().possibleMoves.isEmpty()) {
             checkmateMsg = "\n" + game.whiteUsername() + " is in checkmate!";
             //System.out.println("\n" + game.whiteUsername() + " is in checkmate!");
         }
