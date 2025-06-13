@@ -77,6 +77,7 @@ public class ServerWebSocketHandler {
 
     private void handleMakeMove(Session session, UserGameCommand clientMessage) throws DataAccessException, InvalidMoveException {
         GameData game = Server.gameDAO.getGame(clientMessage.getGameID());
+        GameData oldGame = Server.gameDAO.getGame(clientMessage.getGameID());
         AuthData dt = Server.authDAO.getAuth(clientMessage.getAuthToken());
         if(dt == null){
             sendError(session);
@@ -100,32 +101,33 @@ public class ServerWebSocketHandler {
         }
         try{
             game.game().makeMove(clientMessage.move);
+            Server.gameDAO.replaceGameData(oldGame, game);
         } catch(Exception e){
             sendError(session);
             return;
         }
         List<Session> gameSessions = getSessionsByGameId(clientMessage.getGameID());
-        loadGames(gameSessions, dt, clientMessage.getGameID());
         ServerMessage newMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
         ChessPosition start = clientMessage.move.getStartPosition();
         ChessPosition end = clientMessage.move.getEndPosition();
         newMessage.message = "\n" + dt.username() + " moved a piece from " + start.x + " " + getLetter(start.y) + " to " + end.x + " " + getLetter(end.y);
         sendEveryoneElse(session, newMessage, newMessage.message, clientMessage.getGameID());
-        ServerMessage newerMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+        ServerMessage newerMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+        loadGames(gameSessions, dt, clientMessage.getGameID());
         if(game.game().blackInCheckmate){
-            newerMessage.message = "\n" + game.blackUsername() + " is in checkmate!";
+            newerMessage.errorMessage = "\n" + game.blackUsername() + " is in checkmate!";
         }
         if(game.game().whiteInCheckmate){
-            newerMessage.message = "\n" + game.whiteUsername() + " is in checkmate!";
+            newerMessage.errorMessage = "\n" + game.whiteUsername() + " is in checkmate!";
         }
         if(game.game().whiteInCheck && !game.game().whiteInCheckmate){
-            newerMessage.message = "\n" + game.whiteUsername() + " is in check!";
+            //newerMessage.errorMessage = "\n" + game.whiteUsername() + " is in check!";
         }
         if(game.game().blackInCheck && !game.game().blackInCheckmate){
-            newerMessage.message = "\n" + game.blackUsername() + " is in check!";
+            //newerMessage.errorMessage = "\n" + game.blackUsername() + " is in check!";
         }
-        if(newerMessage.message != null) {
-            sendEveryoneElse(session, newerMessage, newerMessage.message, clientMessage.getGameID());
+        if(newerMessage.errorMessage != null) {
+            sendEveryoneElse(session, newerMessage, newerMessage.errorMessage, clientMessage.getGameID());
         }
     }
 
