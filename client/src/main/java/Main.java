@@ -6,8 +6,7 @@ import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
-import org.eclipse.jetty.server.Authentication;
-import server.ServerFacade;
+
 import javax.websocket.*;
 import service.CreateGameRequest;
 import service.JoinGameRequest;

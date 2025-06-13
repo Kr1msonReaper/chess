@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import model.AuthData;
 import model.GameData;
-import server.Server;
 import websocket.messages.ServerMessage;
 
 import javax.websocket.*;

@@ -1,6 +1,6 @@
 package client;
 
-import server.ServerFacade;
+import ServerFacade;
 import dataaccess.DataAccessException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
