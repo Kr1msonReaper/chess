@@ -34,6 +34,43 @@ public class ChessPosition {
         return occupyingPiece;
     }
 
+    public static ChessPiece.PieceType getPieceFromString(String pieceString) {
+        if (pieceString == null || pieceString.equals(" ") || pieceString.trim().isEmpty()) {
+            return null;
+        }
+
+        // Convert to uppercase for comparison
+        String upperPiece = pieceString.toUpperCase();
+
+        ChessPiece.PieceType pieceType = null;
+
+        switch (upperPiece) {
+            case "P":
+                pieceType = ChessPiece.PieceType.PAWN;
+                break;
+            case "R":
+                pieceType = ChessPiece.PieceType.ROOK;
+                break;
+            case "N":
+                pieceType = ChessPiece.PieceType.KNIGHT;
+                break;
+            case "B":
+                pieceType = ChessPiece.PieceType.BISHOP;
+                break;
+            case "Q":
+                pieceType = ChessPiece.PieceType.QUEEN;
+                break;
+            case "K":
+                pieceType = ChessPiece.PieceType.KING;
+                break;
+            default:
+                return null;
+        }
+
+        // Create and return the chess piece with the specified type and team color
+        return pieceType;
+    }
+
     public String getPieceString(){
         if (occupyingPiece == null){
             return " ";

@@ -232,9 +232,13 @@ public class Main {
         int y1 = getNumber(line[3]);
         int x2 = Integer.parseInt(line[4]);
         int y2 = getNumber(line[5]);
+        ChessPiece.PieceType proPiece = null;
+        if(line.length == 7){
+            proPiece = ChessPosition.getPieceFromString(line[6]);
+        }
         ChessPosition start = new ChessPosition(x1, y1);
         ChessPosition end = new ChessPosition(x2, y2);
-        ChessMove newMove = new ChessMove(start, end, null);
+        ChessMove newMove = new ChessMove(start, end, proPiece);
         UserGameCommand newMessage = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, token.authToken(), gameID);
         newMessage.move = newMove;
         socket.sendMessage(GSON.toJson(newMessage, UserGameCommand.class));
@@ -261,7 +265,7 @@ public class Main {
     private static void handleHelpCommand(boolean isLoggedIn, boolean isInGame) {
         if(isInGame){
             System.out.println("help - discover what actions you can take.\nredraw chess board - view the current board.\n" +
-                    "leave - leave the game.\nmake move <1-8> <a-h> to <1-8> <a-h> - move a piece.\nresign - forfeit the game.\n" +
+                    "leave - leave the game.\nmake move <1-8> <a-h> <1-8> <a-h> (<B/N/R/Q> Pawn Promotion) - move a piece.\nresign - forfeit the game.\n" +
                     "highlight legal moves <1-8> <a-h> - view possible moves.\nhelp - with possible commands");
             return;
         }
