@@ -40,7 +40,13 @@ public class ServerWebSocketHandler {
         }
         if (message.contains("Identification:")) {
             String[] split = message.split(":");
-            assignId(session, split[1]);
+            if (split.length >= 3) {
+                int gameID = Integer.parseInt(split[1]);
+                String authToken = split[2];
+                assignId(session, authToken, gameID);
+            } else {
+                assignIdForSession(session, split[1]);
+            }
             return;
         }
         if (message.contains("AssignGame:")) {
@@ -59,8 +65,29 @@ public class ServerWebSocketHandler {
         if(clientMessage.getCommandType() == UserGameCommand.CommandType.RESIGN){
             handleResign(session, clientMessage);
         }
+        if(clientMessage.getCommandType() == UserGameCommand.CommandType.MAKE_MOVE){
+            handleMakeMove(session, clientMessage);
+        }
 
         //session.getRemote().sendString("template");
+    }
+
+    private void handleMakeMove(Session session, UserGameCommand clientMessage){
+
+    }
+
+    public void assignIdForSession(Session senderSession, String ID) {
+        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : organizedSessions.keySet()) {
+            if (sessionMap.containsKey(senderSession)) {
+                PlayerInfo info = sessionMap.get(senderSession);
+                if (info != null) {
+                    info.setAuthToken(ID);
+                } else {
+                    sessionMap.put(senderSession, new PlayerInfo(ID, "observer", false));
+                }
+                break;
+            }
+        }
     }
 
     private void handleResign(Session session, UserGameCommand clientMessage) throws DataAccessException {
@@ -99,19 +126,24 @@ public class ServerWebSocketHandler {
             sendError(session);
             return;
         }
-        assignId(session, clientMessage.getAuthToken());
         assignGame(session, clientMessage.getGameID().toString());
+        assignId(session, clientMessage.getAuthToken(), clientMessage.getGameID());
+
         String notif = "";
         if(!getPlayerColor(authData).isEmpty()){
             notif = authData.username() + " has joined the game as " + getPlayerColor(authData) + ".";
-            assignRole(session, "player", clientMessage.getAuthToken(), false);
+            assignRole(session, "player", clientMessage.getAuthToken(), false, clientMessage.getGameID());
         } else {
             notif = authData.username() + " has joined the game as an observer.";
-            assignRole(session, "observer", clientMessage.getAuthToken(), false);
+            assignRole(session, "observer", clientMessage.getAuthToken(), false, clientMessage.getGameID());
         }
+
         ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
         sendEveryoneElse(session, sendBack, notif, clientMessage.getGameID());
-        loadGame(session, Server.authDAO.getAuth(clientMessage.getAuthToken()), clientMessage.getGameID());
+        //System.out.println(clientMessage.getAuthToken());
+        loadGame(session, authData, clientMessage.getGameID());
+        //System.out.println(getAuthTokenBySession(session));
+        //System.out.println(authData.authToken());
     }
 
     private void handleLeave(Session session, UserGameCommand clientMessage) throws DataAccessException {
@@ -139,6 +171,7 @@ public class ServerWebSocketHandler {
         Server.gameDAO.replaceGameData(game, newGameInfo);
         ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
         sendEveryoneElse(session, sendBack, notif, clientMessage.getGameID());
+        System.out.println(clientMessage.getAuthToken());
         removePlayerFromGame(session, clientMessage.getGameID());
     }
 
@@ -254,14 +287,14 @@ public class ServerWebSocketHandler {
     }
 
 
-    public void assignId(Session senderSession, String ID) {
-        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : organizedSessions.keySet()) {
-            if (sessionMap.containsKey(senderSession)) {
-                PlayerInfo info = sessionMap.get(senderSession);
+    public void assignId(Session senderSession, String ID, int gameID) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+            if (entry.getValue() == gameID && entry.getKey().containsKey(senderSession)) {
+                PlayerInfo info = entry.getKey().get(senderSession);
                 if (info != null) {
                     info.setAuthToken(ID);
                 } else {
-                    sessionMap.put(senderSession, new PlayerInfo(ID, "observer", false));
+                    entry.getKey().put(senderSession, new PlayerInfo(ID, "observer", false));
                 }
                 break;
             }
@@ -284,16 +317,16 @@ public class ServerWebSocketHandler {
         organizedSessions.put(newSessionMap, targetGameId);
     }
 
-    public void assignRole(Session senderSession, String role, String token, boolean hasResigned) {
-        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : organizedSessions.keySet()) {
-            if (sessionMap.containsKey(senderSession)) {
-                PlayerInfo info = sessionMap.get(senderSession);
+    public void assignRole(Session senderSession, String role, String token, boolean hasResigned, int gameID) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+            if (entry.getValue() == gameID && entry.getKey().containsKey(senderSession)) {
+                PlayerInfo info = entry.getKey().get(senderSession);
                 if (info != null) {
                     info.setRole(role);
                     info.setAuthToken(token);
                     info.setResigned(hasResigned);
                 } else {
-                    sessionMap.put(senderSession, new PlayerInfo(token, role, hasResigned));
+                    entry.getKey().put(senderSession, new PlayerInfo(token, role, hasResigned));
                 }
                 break;
             }

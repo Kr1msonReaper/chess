@@ -242,9 +242,9 @@ public class Main {
         } else if(line[0].contains("redraw") && line[1].contains("chess") && line[2].contains("board") && isInGame){
             redrawBoard(currentToken, null, -1, -1);
         } else if(line[0].contains("leave") && isInGame){
-            handleLeaveCommand(currentToken);
+            return handleLeaveCommand(currentToken);
         } else if(line[0].contains("make") && line[1].contains("move") && isInGame){
-
+            handleMakeMove(line, currentToken);
         } else if(line[0].contains("resign") && isInGame){
 
         } else if(line[0].contains("highlight") && line[1].contains("legal") && line[2].contains("moves") && isInGame){
@@ -256,7 +256,22 @@ public class Main {
         return result;
     }
 
-    private static void handleLeaveCommand(AuthData token) throws IOException {
+    private static void handleMakeMove(String[] line, AuthData token) throws IOException {
+        Collection<GameData> games = facade.listGames(token);
+        Integer gameID = -1;
+        for(GameData game : games){
+            if(game.blackUsername() != null && game.blackUsername().equals(token.username())){
+                gameID = game.gameID();
+            }
+            if(game.whiteUsername() != null && game.whiteUsername().equals(token.username())){
+                gameID = game.gameID();
+            }
+        }
+        int x1 =
+        UserGameCommand newMessage = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, token.authToken(), gameID);
+    }
+
+    private static CommandResult handleLeaveCommand(AuthData token) throws IOException {
         Collection<GameData> games = facade.listGames(token);
         Integer gameID = -1;
         for(GameData game : games){
@@ -270,6 +285,8 @@ public class Main {
 
         UserGameCommand newMsg = new UserGameCommand(UserGameCommand.CommandType.LEAVE, token.authToken(), gameID);
         socket.sendMessage(GSON.toJson(newMsg));
+        CommandResult result = new CommandResult(true, false, token, false);
+        return result;
     }
 
     private static void handleHelpCommand(boolean isLoggedIn, boolean isInGame) {
@@ -439,9 +456,10 @@ public class Main {
         }
 
         GameData chosenGame = findGameById(req.gameID, currentToken);
-        displayGameBoard(line[2], chosenGame);
+        //displayGameBoard(line[2], chosenGame);
         socket.sendMessage("AssignGame:" + req.gameID);
         sendJoinMessage(currentToken.authToken(), req.gameID, "");
+        //System.out.println(currentToken.authToken());
         return new CommandResult(true, true, currentToken, false);
     }
 
@@ -518,7 +536,7 @@ public class Main {
         GameData chosenGame = findGameById(gameId, currentToken);
         socket.sendMessage("AssignGame:" + gameId);
         sendJoinMessage(currentToken.authToken(), gameId, "observer");
-        drawWhiteBoard(chosenGame, new ArrayList<>());
+        //drawWhiteBoard(chosenGame, new ArrayList<>());
     }
 
     private static int findGameIdFromList(int listIndex, AuthData currentToken) throws IOException {
