@@ -21,6 +21,9 @@ public class WebsocketClientHandler {
     public void onOpen(Session session) throws IOException {
         this.session = session;
 
+        onClose(null, null);
+        onError(null, null);
+
         new Thread(() -> {
             while (session != null && session.isOpen()) {
                 try {
@@ -54,11 +57,17 @@ public class WebsocketClientHandler {
 
     @OnClose
     public void onClose(Session session, CloseReason reason) {
+        if(session == null){
+            return;
+        }
         this.session = null;
     }
 
     @OnError
     public void onError(Session session, Throwable error) {
+        if(session == null){
+            return;
+        }
         error.printStackTrace();
     }
 

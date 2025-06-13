@@ -3,12 +3,9 @@ import chess.ChessGame;
 import chess.ChessPosition;
 import chess.InvalidMoveException;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import dataaccess.DataAccessException;
 import model.AuthData;
 import model.GameData;
-import org.eclipse.jetty.server.Authentication;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import websocket.commands.UserGameCommand;
@@ -23,17 +20,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @WebSocket
 public class ServerWebSocketHandler {
-    private static final ConcurrentHashMap<Session, String> sessions = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<ConcurrentHashMap<Session, PlayerInfo>, Integer> organizedSessions = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Session, String> SESSIONS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<ConcurrentHashMap<Session, PlayerInfo>, Integer> ORGANIZED_SESSIONS = new ConcurrentHashMap<>();
     public static final Gson GSON = new Gson();
 
     @OnWebSocketConnect
     public void onConnect(Session session) throws IOException {
-        sessions.put(session, "");
+        SESSIONS.put(session, "");
     }
 
     public static void clearMap(){
-        organizedSessions.clear();
+        ORGANIZED_SESSIONS.clear();
     }
 
     @OnWebSocketMessage
@@ -71,8 +68,6 @@ public class ServerWebSocketHandler {
         if(clientMessage.getCommandType() == UserGameCommand.CommandType.MAKE_MOVE){
             handleMakeMove(session, clientMessage);
         }
-
-        //session.getRemote().sendString("template");
     }
 
     private void handleMakeMove(Session session, UserGameCommand clientMessage) throws DataAccessException, InvalidMoveException {
@@ -136,14 +131,14 @@ public class ServerWebSocketHandler {
         return (num >= 1 && num <= 8) ? letters[num] : "";
     }
 
-    public void assignIdForSession(Session senderSession, String ID) {
-        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : organizedSessions.keySet()) {
+    public void assignIdForSession(Session senderSession, String id) {
+        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : ORGANIZED_SESSIONS.keySet()) {
             if (sessionMap.containsKey(senderSession)) {
                 PlayerInfo info = sessionMap.get(senderSession);
                 if (info != null) {
-                    info.setAuthToken(ID);
+                    info.setAuthToken(id);
                 } else {
-                    sessionMap.put(senderSession, new PlayerInfo(ID, "observer", false));
+                    sessionMap.put(senderSession, new PlayerInfo(id, "observer", false));
                 }
                 break;
             }
@@ -236,7 +231,7 @@ public class ServerWebSocketHandler {
     }
 
     public boolean sessionExistsInGame(Session sessionToCheck, int gameID) {
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID) {
                 return entry.getKey().containsKey(sessionToCheck);
             }
@@ -258,7 +253,7 @@ public class ServerWebSocketHandler {
 
     @OnWebSocketClose
     public void onClose(Session session, int statusCode, String reason) {
-        sessions.remove(session);
+        SESSIONS.remove(session);
     }
 
     @OnWebSocketError
@@ -319,7 +314,7 @@ public class ServerWebSocketHandler {
         message.auth = null;
         message.message = (text != null) ? text : null;
 
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID) {
                 for (Session session : entry.getKey().keySet()) {
                     if (session.isOpen() && !session.equals(senderSession)) {
@@ -344,18 +339,14 @@ public class ServerWebSocketHandler {
         message.auth = null;
         message.message = (text != null) ? text : null;
 
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID) {
                 for (Session session : entry.getKey().keySet()) {
                     if (session.isOpen()) {
                         try {
-                            AuthData data = Server.authDAO.getAuth(getAuthTokenBySession(session));
-                            //System.out.println("Sent \'" + message.message + "\' to: " + data.username());
                             session.getRemote().sendString(GSON.toJson(message, ServerMessage.class));
                         } catch (IOException e) {
                             e.printStackTrace();
-                        } catch (DataAccessException e) {
-                            throw new RuntimeException(e);
                         }
                     }
                 }
@@ -365,14 +356,14 @@ public class ServerWebSocketHandler {
     }
 
 
-    public void assignId(Session senderSession, String ID, int gameID) {
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+    public void assignId(Session senderSession, String id, int gameID) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID && entry.getKey().containsKey(senderSession)) {
                 PlayerInfo info = entry.getKey().get(senderSession);
                 if (info != null) {
-                    info.setAuthToken(ID);
+                    info.setAuthToken(id);
                 } else {
-                    entry.getKey().put(senderSession, new PlayerInfo(ID, "observer", false));
+                    entry.getKey().put(senderSession, new PlayerInfo(id, "observer", false));
                 }
                 break;
             }
@@ -383,7 +374,7 @@ public class ServerWebSocketHandler {
     public void assignGame(Session senderSession, String gameID) {
         Integer targetGameId = Integer.valueOf(gameID);
 
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue().equals(targetGameId)) {
                 entry.getKey().put(senderSession, new PlayerInfo("", "observer", false));
                 return;
@@ -392,11 +383,11 @@ public class ServerWebSocketHandler {
 
         ConcurrentHashMap<Session, PlayerInfo> newSessionMap = new ConcurrentHashMap<>();
         newSessionMap.put(senderSession, new PlayerInfo("", "observer", false));
-        organizedSessions.put(newSessionMap, targetGameId);
+        ORGANIZED_SESSIONS.put(newSessionMap, targetGameId);
     }
 
     public void assignRole(Session senderSession, String role, String token, boolean hasResigned, int gameID) {
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID && entry.getKey().containsKey(senderSession)) {
                 PlayerInfo info = entry.getKey().get(senderSession);
                 if (info != null) {
@@ -412,7 +403,7 @@ public class ServerWebSocketHandler {
     }
 
     public String getRole(String authToken, int gameID) {
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID) {
                 ConcurrentHashMap<Session, PlayerInfo> sessionMap = entry.getKey();
                 for (PlayerInfo info : sessionMap.values()) {
@@ -426,7 +417,7 @@ public class ServerWebSocketHandler {
     }
 
     public PlayerInfo getPlayerInfo(String authToken, int gameID) {
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID) {
                 ConcurrentHashMap<Session, PlayerInfo> sessionMap = entry.getKey();
                 for (PlayerInfo info : sessionMap.values()) {
@@ -439,7 +430,7 @@ public class ServerWebSocketHandler {
         return null;
     }
     public String getAuthTokenBySession(Session sessionToCheck) {
-        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : organizedSessions.keySet()) {
+        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : ORGANIZED_SESSIONS.keySet()) {
             if (sessionMap.containsKey(sessionToCheck)) {
                 PlayerInfo info = sessionMap.get(sessionToCheck);
                 if (info != null) {
@@ -451,7 +442,7 @@ public class ServerWebSocketHandler {
     }
 
     public void updatePlayerInfo(Session session, String role, String token, boolean hasResigned) {
-        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : organizedSessions.keySet()) {
+        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : ORGANIZED_SESSIONS.keySet()) {
             if (sessionMap.containsKey(session)) {
                 PlayerInfo info = sessionMap.get(session);
                 if (info != null) {
@@ -466,7 +457,7 @@ public class ServerWebSocketHandler {
     public boolean hasAnyoneResigned(int gameID) {
         List<PlayerInfo> playersInGame = new ArrayList<>();
 
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID) {
                 ConcurrentHashMap<Session, PlayerInfo> sessionMap = entry.getKey();
                 for (PlayerInfo info : sessionMap.values()) {
@@ -481,7 +472,7 @@ public class ServerWebSocketHandler {
         return false;
     }
     public void removePlayerFromGame(Session sessionToRemove, int gameID) {
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID) {
                 ConcurrentHashMap<Session, PlayerInfo> sessionMap = entry.getKey();
                 sessionMap.remove(sessionToRemove);
@@ -494,7 +485,7 @@ public class ServerWebSocketHandler {
     public List<Session> getSessionsByGameId(int gameId) {
         List<Session> sessions = new ArrayList<>();
 
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : organizedSessions.entrySet()) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameId) {
                 sessions.addAll(entry.getKey().keySet());
                 break;

@@ -511,17 +511,6 @@ public class Main {
         return new GameData(1, "", "", "", new ChessGame());
     }
 
-    private static void displayGameBoard(String color, GameData chosenGame) {
-        String lowerColor = color.toLowerCase(Locale.ROOT);
-        if(lowerColor.equals("white")){
-            drawWhiteBoard(chosenGame, new ArrayList<>());
-        } else if(lowerColor.equals("black")){
-            drawBlackBoard(chosenGame, new ArrayList<>());
-        } else {
-            System.out.println("Incorrect color chosen.");
-        }
-    }
-
     private static void handleObserveCommand(String[] line, AuthData currentToken) throws IOException {
         if(line.length != 2){
             System.out.println("Incorrect number of arguments.");
