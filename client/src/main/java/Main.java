@@ -176,7 +176,6 @@ public class Main {
             }
         }
     }
-
     private static String[] getInputLine(boolean isLoggedIn) {
         if(isLoggedIn){
             System.out.print("[LOGGED_IN] >>>");
@@ -207,7 +206,7 @@ public class Main {
             } else if (line[0].contains("join") && isLoggedIn && !isInGame) {
                 result = handleJoinCommand(line, currentToken);
             } else if (line[0].contains("observe") && isLoggedIn && !isInGame) {
-                handleObserveCommand(line, currentToken);
+                result = handleObserveCommand(line, currentToken);
             } else if (line[0].contains("redraw") && line[1].contains("chess") && line[2].contains("board") && isInGame) {
                 redrawBoard(currentToken, null, -1, -1);
             } else if (line[0].contains("leave") && isInGame) {
@@ -265,8 +264,11 @@ public class Main {
     private static void handleHelpCommand(boolean isLoggedIn, boolean isInGame) {
         if(isInGame){
             System.out.println("help - discover what actions you can take.\nredraw chess board - view the current board.\n" +
-                    "leave - leave the game.\nmake move <1-8> <a-h> <1-8> <a-h> (<B/N/R/Q> Pawn Promotion) - move a piece.\nresign - forfeit the game.\n" +
-                    "highlight legal moves <1-8> <a-h> - view possible moves.\nhelp - with possible commands");
+                    "leave - leave the game.\n" +
+                    "make move <1-8> <a-h> <1-8> <a-h> (<B/N/R/Q> Pawn Promotion) - move a piece.\n" +
+                    "resign - forfeit the game.\n" +
+                    "highlight legal moves <1-8> <a-h> - view possible moves.\n" +
+                    "help - with possible commands");
             return;
         }
         if(!isLoggedIn){
@@ -405,14 +407,11 @@ public class Main {
         }
     }
     private static CommandResult handleJoinCommand(String[] line, AuthData currentToken) throws IOException {
-        if(line.length != 3){
-            System.out.println("Error: Incorrect number of arguments.");
+        if(line.length != 3){System.out.println("Error: Incorrect number of arguments.");
             return null;
         }
         JoinGameRequest req = createJoinRequest(line, currentToken);
-        if(req == null) {
-            return null;
-        }
+        if(req == null) {return null;}
         String result = facade.joinGame(req, currentToken);
         if(result.contains("Error")){
             System.out.println("Error: Spot already taken, incorrect game number, or unrecognizable color.");
@@ -441,16 +440,11 @@ public class Main {
             return null;
         }
         int i = 1;
-        for(GameData data : games){
-            if(i == req.gameID){
-                req.gameID = data.gameID();
-                break;
-            }
+        for(GameData data : games){if(i == req.gameID){req.gameID = data.gameID();break;}
             i++;
         }
         return req;
     }
-
     private static GameData findGameById(int gameId, AuthData currentToken) throws IOException {
         Collection<GameData> games = facade.listGames(currentToken);
         for(GameData game : games){
@@ -460,26 +454,22 @@ public class Main {
         }
         return new GameData(1, "", "", "", new ChessGame());
     }
-    private static void handleObserveCommand(String[] line, AuthData currentToken) throws IOException {
+    private static CommandResult handleObserveCommand(String[] line, AuthData currentToken) throws IOException {
         if(line.length != 2){
             System.out.println("Incorrect number of arguments.");
-            return;
+            return null;
         }
         int id = 0;
         try {
             id = Integer.parseInt(line[1]);
-        } catch(Exception e){
-            System.out.println("Error: Incorrect game number.");
-            return;
-        }
+        } catch(Exception e){ System.out.println("Error: Incorrect game number."); return null;}
         int gameId = findGameIdFromList(id, currentToken);
-        if(gameId == -1){
-            System.out.println("Game does not exist.");
-            return;
-        }
+        if(gameId == -1){System.out.println("Game does not exist."); return null;}
         GameData chosenGame = findGameById(gameId, currentToken);
         socket.sendMessage("AssignGame:" + gameId);
         sendJoinMessage(currentToken.authToken(), gameId, "observer");
+        CommandResult result = new CommandResult(true, true, currentToken, false);
+        return result;
     }
     private static int findGameIdFromList(int listIndex, AuthData currentToken) throws IOException {
         Collection<GameData> games = facade.listGames(currentToken);
@@ -488,9 +478,7 @@ public class Main {
         }
         int i = 1;
         for(GameData data : games){
-            if(i == listIndex){
-                return data.gameID();
-            }
+            if(i == listIndex){ return data.gameID();}
             i++;
         }
         return -1;

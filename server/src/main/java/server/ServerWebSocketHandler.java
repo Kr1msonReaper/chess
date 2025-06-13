@@ -345,16 +345,13 @@ public class ServerWebSocketHandler {
                 Session session = entry.getKey();
                 PlayerInfo playerInfo = entry.getValue();
 
-                if (session.isOpen() && playerInfo != null &&
-                        playerInfo.getAuthToken() != null && !playerInfo.getAuthToken().isEmpty()) {
-                    try {
-                        AuthData auth = Server.authDAO.getAuth(playerInfo.getAuthToken());
-                        if (auth != null) {
-                            loadGame(session, auth, gameId);
-                        }
-                    } catch (DataAccessException e) {
-                        e.printStackTrace();
+                try {
+                    AuthData auth = Server.authDAO.getAuth(playerInfo.getAuthToken());
+                    if (auth != null) {
+                        loadGame(session, auth, gameId);
                     }
+                } catch (DataAccessException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -481,18 +478,6 @@ public class ServerWebSocketHandler {
                 .filter(entry -> entry.getValue() == gameID)
                 .findFirst()
                 .ifPresent(entry -> entry.getKey().remove(session));
-    }
-
-    public String getAuthTokenBySession(Session session, int gameID) {
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
-            if (entry.getValue() == gameID) {
-                PlayerInfo info = entry.getKey().get(session);
-                if (info != null) {
-                    return info.getAuthToken();
-                }
-            }
-        }
-        return null;
     }
 
     public String getPlayerColor(AuthData token, int gameID) throws DataAccessException {
