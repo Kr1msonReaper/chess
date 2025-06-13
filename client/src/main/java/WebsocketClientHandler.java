@@ -47,6 +47,9 @@ public class WebsocketClientHandler {
         if(serverMessage.getServerMessageType() == ServerMessage.ServerMessageType.LOAD_GAME){
             loadGame(serverMessage, serverMessage.game, serverMessage.auth);
         }
+        if(serverMessage.getServerMessageType() == ServerMessage.ServerMessageType.ERROR){
+            System.out.println(serverMessage.errorMessage);
+        }
     }
 
     private void loadGame(ServerMessage serverMessage, GameData game, AuthData auth) throws IOException {

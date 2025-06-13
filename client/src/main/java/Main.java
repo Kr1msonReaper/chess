@@ -188,36 +188,40 @@ public class Main {
     }
     private static CommandResult executeCommand(String[] line, boolean isLoggedIn, boolean isInGame, AuthData currentToken) throws IOException {
         CommandResult result = new CommandResult(isLoggedIn, isInGame, currentToken, false);
-        if(line[0].contains("help")){
-            handleHelpCommand(isLoggedIn, isInGame);
-        } else if(line[0].contains("register") && !isInGame){
-            result = handleRegisterCommand(line);
-        } else if(line[0].contains("login") && !isInGame){
-            result = handleLoginCommand(line);
-        } else if(line[0].contains("quit")){
-            handleQuitCommand(currentToken);
-            result.shouldExit = true;
-        } else if(line[0].contains("logout") && isLoggedIn){
-            result = handleLogoutCommand(currentToken);
-        } else if(line[0].contains("create") && isLoggedIn){
-            handleCreateCommand(line, currentToken);
-        } else if(line[0].contains("list") && isLoggedIn){
-            handleListCommand(currentToken);
-        } else if(line[0].contains("join") && isLoggedIn && !isInGame){
-            result = handleJoinCommand(line, currentToken);
-        } else if(line[0].contains("observe") && isLoggedIn && !isInGame) {
-            handleObserveCommand(line, currentToken);
-        } else if(line[0].contains("redraw") && line[1].contains("chess") && line[2].contains("board") && isInGame){
-            redrawBoard(currentToken, null, -1, -1);
-        } else if(line[0].contains("leave") && isInGame){
-            return handleLeaveCommand(currentToken);
-        } else if(line[0].contains("make") && line[1].contains("move") && isInGame){
-            handleMakeMove(line, currentToken);
-        } else if(line[0].contains("resign") && isInGame){
+        try {
+            if (line[0].contains("help")) {
+                handleHelpCommand(isLoggedIn, isInGame);
+            } else if (line[0].contains("register") && !isInGame) {
+                result = handleRegisterCommand(line);
+            } else if (line[0].contains("login") && !isInGame) {
+                result = handleLoginCommand(line);
+            } else if (line[0].contains("quit")) {
+                handleQuitCommand(currentToken);
+                result.shouldExit = true;
+            } else if (line[0].contains("logout") && isLoggedIn) {
+                result = handleLogoutCommand(currentToken);
+            } else if (line[0].contains("create") && isLoggedIn) {
+                handleCreateCommand(line, currentToken);
+            } else if (line[0].contains("list") && isLoggedIn) {
+                handleListCommand(currentToken);
+            } else if (line[0].contains("join") && isLoggedIn && !isInGame) {
+                result = handleJoinCommand(line, currentToken);
+            } else if (line[0].contains("observe") && isLoggedIn && !isInGame) {
+                handleObserveCommand(line, currentToken);
+            } else if (line[0].contains("redraw") && line[1].contains("chess") && line[2].contains("board") && isInGame) {
+                redrawBoard(currentToken, null, -1, -1);
+            } else if (line[0].contains("leave") && isInGame) {
+                return handleLeaveCommand(currentToken);
+            } else if (line[0].contains("make") && line[1].contains("move") && isInGame) {
+                handleMakeMove(line, currentToken);
+            } else if (line[0].contains("resign") && isInGame) {
 
-        } else if(line[0].contains("highlight") && line[1].contains("legal") && line[2].contains("moves") && isInGame){
-            redrawBoard(currentToken, null, Integer.parseInt(line[3]), getNumber(line[4]));
-        } else {
+            } else if (line[0].contains("highlight") && line[1].contains("legal") && line[2].contains("moves") && isInGame) {
+                redrawBoard(currentToken, null, Integer.parseInt(line[3]), getNumber(line[4]));
+            } else {
+                System.out.println("Error: Command not recognized.");
+            }
+        } catch(Exception e){
             System.out.println("Error: Command not recognized.");
         }
         return result;
@@ -354,6 +358,11 @@ public class Main {
         }
         Collection<ChessMove> filteredMoves = new ArrayList<>();
         if(games != null && games.size() == 0){
+            games.add(new GameData(999, "placeholder",
+                    "placeholder", "placeholder", new ChessGame()));
+        }
+        if(games == null){
+            games = new ArrayList<>();
             games.add(new GameData(999, "placeholder",
                     "placeholder", "placeholder", new ChessGame()));
         }

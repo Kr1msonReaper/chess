@@ -81,12 +81,12 @@ public class ServerWebSocketHandler {
         AuthData auth = Server.authDAO.getAuth(cmd.getAuthToken());
 
         if (!validateMoveRequest(auth, cmd, game)) {
-            sendError(session);
+            sendError(session, "You can't move there!");
             return;
         }
 
         if (!executeMoveAndUpdate(game, cmd)) {
-            sendError(session);
+            sendError(session, "You can't move there!");
             return;
         }
 
@@ -169,7 +169,7 @@ public class ServerWebSocketHandler {
     private void handleResign(Session session, UserGameCommand cmd) throws DataAccessException {
         AuthData auth = Server.authDAO.getAuth(cmd.getAuthToken());
         if (!validateResignRequest(session, cmd, auth)) {
-            sendError(session);
+            sendError(session, "");
             return;
         }
 
@@ -194,7 +194,7 @@ public class ServerWebSocketHandler {
     private void handleConnect(Session session, UserGameCommand cmd) throws DataAccessException {
         AuthData auth = Server.authDAO.getAuth(cmd.getAuthToken());
         if (auth == null || Server.gameDAO.getGame(cmd.getGameID()) == null) {
-            sendError(session);
+            sendError(session, "You can't resign from that game!");
             return;
         }
 
@@ -232,7 +232,7 @@ public class ServerWebSocketHandler {
     private void handleLeave(Session session, UserGameCommand cmd) throws DataAccessException {
         AuthData auth = Server.authDAO.getAuth(cmd.getAuthToken());
         if (auth == null || !sessionExistsInGame(session, cmd.getGameID())) {
-            sendError(session);
+            sendError(session, "You're not a part of that game!");
             return;
         }
 
@@ -273,9 +273,9 @@ public class ServerWebSocketHandler {
         error.printStackTrace();
     }
 
-    private void sendError(Session session) {
+    private void sendError(Session session, String message) {
         ServerMessage msg = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-        msg.errorMessage = "Error.";
+        msg.errorMessage = message;
         sendToSession(session, msg);
     }
 
