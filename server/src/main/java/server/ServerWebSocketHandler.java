@@ -1,4 +1,5 @@
 package server;
+
 import chess.ChessGame;
 import chess.ChessPosition;
 import chess.InvalidMoveException;
@@ -21,7 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @WebSocket
 public class ServerWebSocketHandler {
     private static final ConcurrentHashMap<Session, String> SESSIONS = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<ConcurrentHashMap<Session, PlayerInfo>, Integer> ORGANIZED_SESSIONS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<ConcurrentHashMap<Session, PlayerInfo>, Integer> ORGANIZED_SESSIONS =
+            new ConcurrentHashMap<>();
     public static final Gson GSON = new Gson();
 
     @OnWebSocketConnect
@@ -29,44 +31,56 @@ public class ServerWebSocketHandler {
         SESSIONS.put(session, "");
     }
 
-    public static void clearMap(){
+    public static void clearMap() {
         ORGANIZED_SESSIONS.clear();
     }
 
     @OnWebSocketMessage
     public void onMessage(Session session, String message) throws IOException, DataAccessException, InvalidMoveException {
-        if(message.equals("ping")){
+        if (message.equals("ping")) {
             return;
         }
+
+        if (handleSpecialMessages(session, message)) {
+            return;
+        }
+
+        UserGameCommand clientMessage = GSON.fromJson(message, UserGameCommand.class);
+        handleCommand(session, clientMessage);
+    }
+
+    private boolean handleSpecialMessages(Session session, String message) {
         if (message.contains("Identification:")) {
-            String[] split = message.split(":");
-            if (split.length >= 3) {
-                int gameID = Integer.parseInt(split[1]);
-                String authToken = split[2];
-                assignId(session, authToken, gameID);
-            } else {
-                assignIdForSession(session, split[1]);
-            }
-            return;
+            handleIdentification(session, message);
+            return true;
         }
+
         if (message.contains("AssignGame:")) {
             String[] split = message.split(":");
             assignGame(session, split[1]);
-            return;
+            return true;
         }
-        UserGameCommand clientMessage = GSON.fromJson(message, UserGameCommand.class);
 
-        if(clientMessage.getCommandType() == UserGameCommand.CommandType.LEAVE){
-            handleLeave(session, clientMessage);
+        return false;
+    }
+
+    private void handleIdentification(Session session, String message) {
+        String[] split = message.split(":");
+        if (split.length >= 3) {
+            int gameID = Integer.parseInt(split[1]);
+            String authToken = split[2];
+            assignId(session, authToken, gameID);
+        } else {
+            assignIdForSession(session, split[1]);
         }
-        if(clientMessage.getCommandType() == UserGameCommand.CommandType.CONNECT){
-            handleConnect(session, clientMessage);
-        }
-        if(clientMessage.getCommandType() == UserGameCommand.CommandType.RESIGN){
-            handleResign(session, clientMessage);
-        }
-        if(clientMessage.getCommandType() == UserGameCommand.CommandType.MAKE_MOVE){
-            handleMakeMove(session, clientMessage);
+    }
+
+    private void handleCommand(Session session, UserGameCommand command) throws DataAccessException, InvalidMoveException {
+        switch (command.getCommandType()) {
+            case LEAVE -> handleLeave(session, command);
+            case CONNECT -> handleConnect(session, command);
+            case RESIGN -> handleResign(session, command);
+            case MAKE_MOVE -> handleMakeMove(session, command);
         }
     }
 
@@ -74,93 +88,84 @@ public class ServerWebSocketHandler {
         GameData game = Server.gameDAO.getGame(clientMessage.getGameID());
         GameData oldGame = Server.gameDAO.getGame(clientMessage.getGameID());
         AuthData dt = Server.authDAO.getAuth(clientMessage.getAuthToken());
-        if(dt == null){
+
+        if (dt == null) {
             sendError(session);
             return;
         }
-        if(getRole(clientMessage.getAuthToken(), clientMessage.getGameID()).equals("observer")){
+
+        if (getRole(clientMessage.getAuthToken(), clientMessage.getGameID()).equals("observer")) {
             sendError(session);
             return;
         }
-        if(!(game.game().getTeamTurn().equals(ChessGame.TeamColor.WHITE) ? game.whiteUsername() : game.blackUsername()).equals(Server.authDAO.getAuth(clientMessage.getAuthToken()).username())){
+
+        String currentPlayerUsername = game.game().getTeamTurn().equals(ChessGame.TeamColor.WHITE) ?
+                game.whiteUsername() : game.blackUsername();
+        if (!currentPlayerUsername.equals(Server.authDAO.getAuth(clientMessage.getAuthToken()).username())) {
             sendError(session);
             return;
         }
-        if(hasAnyoneResigned(clientMessage.getGameID())){
+
+        if (hasAnyoneResigned(clientMessage.getGameID())) {
             sendError(session);
             return;
         }
-        if(game.game().whiteInCheckmate || game.game().blackInCheckmate){
+
+        if (game.game().whiteInCheckmate || game.game().blackInCheckmate) {
             sendError(session);
             return;
         }
-        try{
+
+        try {
             game.game().makeMove(clientMessage.move);
             Server.gameDAO.replaceGameData(oldGame, game);
-        } catch(Exception e){
+        } catch (Exception e) {
             sendError(session);
             return;
         }
+
         List<Session> gameSessions = getSessionsByGameId(clientMessage.getGameID());
         ServerMessage newMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
         ChessPosition start = clientMessage.move.getStartPosition();
         ChessPosition end = clientMessage.move.getEndPosition();
-        newMessage.message = "\n" + dt.username() + " moved a piece from " + start.x + " " + getLetter(start.y) + " to " + end.x + " " + getLetter(end.y);
+        newMessage.message = "\n" + dt.username() + " moved a piece from " + start.x + " " + getLetter(start.y) +
+                " to " + end.x + " " + getLetter(end.y);
         sendEveryoneElse(session, newMessage, newMessage.message, clientMessage.getGameID());
+
         ServerMessage newerMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
         loadGames(gameSessions, dt, clientMessage.getGameID());
-        if(game.game().blackInCheckmate){
+
+        if (game.game().blackInCheckmate) {
             newerMessage.errorMessage = "\n" + game.blackUsername() + " is in checkmate!";
         }
-        if(game.game().whiteInCheckmate){
+        if (game.game().whiteInCheckmate) {
             newerMessage.errorMessage = "\n" + game.whiteUsername() + " is in checkmate!";
         }
-        if(game.game().whiteInCheck && !game.game().whiteInCheckmate){
-            //newerMessage.errorMessage = "\n" + game.whiteUsername() + " is in check!";
-        }
-        if(game.game().blackInCheck && !game.game().blackInCheckmate){
-            //newerMessage.errorMessage = "\n" + game.blackUsername() + " is in check!";
-        }
-        if(newerMessage.errorMessage != null) {
+
+        if (newerMessage.errorMessage != null) {
             sendEveryoneElse(session, newerMessage, newerMessage.errorMessage, clientMessage.getGameID());
-        }
-    }
-
-    public static String getLetter(int num){
-        String[] letters = {"", "a", "b", "c", "d", "e", "f", "g", "h"};
-        return (num >= 1 && num <= 8) ? letters[num] : "";
-    }
-
-    public void assignIdForSession(Session senderSession, String id) {
-        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : ORGANIZED_SESSIONS.keySet()) {
-            if (sessionMap.containsKey(senderSession)) {
-                PlayerInfo info = sessionMap.get(senderSession);
-                if (info != null) {
-                    info.setAuthToken(id);
-                } else {
-                    sessionMap.put(senderSession, new PlayerInfo(id, "observer", false));
-                }
-                break;
-            }
         }
     }
 
     private void handleResign(Session session, UserGameCommand clientMessage) throws DataAccessException {
         AuthData authData = Server.authDAO.getAuth(clientMessage.getAuthToken());
-        if(authData == null){
+        if (authData == null) {
             sendError(session);
             return;
         }
-        if(!sessionExistsInGame(session, clientMessage.getGameID())){
+
+        if (!sessionExistsInGame(session, clientMessage.getGameID())) {
             sendError(session);
             return;
         }
+
         PlayerInfo info = getPlayerInfo(clientMessage.getAuthToken(), clientMessage.getGameID());
-        if(info.hasResigned || info.role.equals("observer")){
+        if (info.hasResigned || info.role.equals("observer")) {
             sendError(session);
             return;
         }
-        if(hasAnyoneResigned(clientMessage.getGameID())){
+
+        if (hasAnyoneResigned(clientMessage.getGameID())) {
             sendError(session);
             return;
         }
@@ -173,19 +178,21 @@ public class ServerWebSocketHandler {
 
     private void handleConnect(Session session, UserGameCommand clientMessage) throws DataAccessException {
         AuthData authData = Server.authDAO.getAuth(clientMessage.getAuthToken());
-        if(authData == null){
+        if (authData == null) {
             sendError(session);
             return;
         }
-        if(Server.gameDAO.getGame(clientMessage.getGameID()) == null){
+
+        if (Server.gameDAO.getGame(clientMessage.getGameID()) == null) {
             sendError(session);
             return;
         }
+
         assignGame(session, clientMessage.getGameID().toString());
         assignId(session, clientMessage.getAuthToken(), clientMessage.getGameID());
 
         String notif = "";
-        if(!getPlayerColor(authData).isEmpty()){
+        if (!getPlayerColor(authData).isEmpty()) {
             notif = authData.username() + " has joined the game as " + getPlayerColor(authData) + ".";
             assignRole(session, "player", clientMessage.getAuthToken(), false, clientMessage.getGameID());
         } else {
@@ -195,60 +202,40 @@ public class ServerWebSocketHandler {
 
         ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
         sendEveryoneElse(session, sendBack, notif, clientMessage.getGameID());
-        //System.out.println(clientMessage.getAuthToken());
         loadGame(session, authData, clientMessage.getGameID());
-        //System.out.println(getAuthTokenBySession(session));
-        //System.out.println(authData.authToken());
     }
 
     private void handleLeave(Session session, UserGameCommand clientMessage) throws DataAccessException {
         AuthData authData = Server.authDAO.getAuth(clientMessage.getAuthToken());
-        if(authData == null){
+        if (authData == null) {
             sendError(session);
             return;
         }
-        if(!sessionExistsInGame(session, clientMessage.getGameID())){
+
+        if (!sessionExistsInGame(session, clientMessage.getGameID())) {
             sendError(session);
             return;
         }
+
         GameData game = Server.gameDAO.getGame(clientMessage.getGameID());
-        if((game.whiteUsername() != null && !game.whiteUsername().equals(authData.username())) && (game.blackUsername() != null && !game.blackUsername().equals(authData.username()))){
+        if ((game.whiteUsername() != null && !game.whiteUsername().equals(authData.username())) &&
+                (game.blackUsername() != null && !game.blackUsername().equals(authData.username()))) {
             return;
         }
 
         String notif = authData.username() + " has left the game.";
         GameData newGameInfo;
-        if(game.whiteUsername() != null && game.whiteUsername().equals(authData.username())){
+        if (game.whiteUsername() != null && game.whiteUsername().equals(authData.username())) {
             newGameInfo = new GameData(game.gameID(), null, game.blackUsername(), game.gameName(), game.game());
         } else {
             newGameInfo = new GameData(game.gameID(), game.whiteUsername(), null, game.gameName(), game.game());
         }
+
         Server.gameDAO.replaceGameData(game, newGameInfo);
         ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
         sendEveryoneElse(session, sendBack, notif, clientMessage.getGameID());
         System.out.println(clientMessage.getAuthToken());
         removePlayerFromGame(session, clientMessage.getGameID());
-    }
-
-    public boolean sessionExistsInGame(Session sessionToCheck, int gameID) {
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
-            if (entry.getValue() == gameID) {
-                return entry.getKey().containsKey(sessionToCheck);
-            }
-        }
-        return false;
-    }
-
-    private void sendError(Session session){
-        ServerMessage serverMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-        serverMessage.errorMessage = "Error.";
-        if (session.isOpen()) {
-            try {
-                session.getRemote().sendString(GSON.toJson(serverMessage, ServerMessage.class));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @OnWebSocketClose
@@ -261,50 +248,14 @@ public class ServerWebSocketHandler {
         error.printStackTrace();
     }
 
-    public String getPlayerColor(AuthData token) throws DataAccessException {
-        Collection<GameData> games = Server.gameDAO.getGames();
-        Integer gameID = -1;
-        for(GameData game : games){
-            if(game.blackUsername() != null && game.blackUsername().equals(token.username())){
-                return "black";
-            }
-            if(game.whiteUsername() != null && game.whiteUsername().equals(token.username())){
-                return "white";
-            }
-        }
-        return "";
-    }
-
-    public void loadGame(Session senderSession, AuthData auth, int gameId) throws DataAccessException {
-        ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
-        GameData game = Server.gameDAO.getGame(gameId);
-        sendBack.game = game;
-        sendBack.auth = auth;
-        sendBack.message = null;
-
-        if (senderSession.isOpen()) {
+    private void sendError(Session session) {
+        ServerMessage serverMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+        serverMessage.errorMessage = "Error.";
+        if (session.isOpen()) {
             try {
-                senderSession.getRemote().sendString(GSON.toJson(sendBack, ServerMessage.class));
+                session.getRemote().sendString(GSON.toJson(serverMessage, ServerMessage.class));
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-        }
-    }
-
-    public void loadGames(List<Session> senderSessions, AuthData auth, int gameId) throws DataAccessException {
-        ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
-        GameData game = Server.gameDAO.getGame(gameId);
-        sendBack.game = game;
-        sendBack.auth = auth;
-        sendBack.message = null;
-
-        for(Session senderSession : senderSessions){
-            if (senderSession.isOpen()) {
-                try {
-                    senderSession.getRemote().sendString(GSON.toJson(sendBack, ServerMessage.class));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         }
     }
@@ -355,6 +306,54 @@ public class ServerWebSocketHandler {
         }
     }
 
+    public void loadGame(Session senderSession, AuthData auth, int gameId) throws DataAccessException {
+        ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        GameData game = Server.gameDAO.getGame(gameId);
+        sendBack.game = game;
+        sendBack.auth = auth;
+        sendBack.message = null;
+
+        if (senderSession.isOpen()) {
+            try {
+                senderSession.getRemote().sendString(GSON.toJson(sendBack, ServerMessage.class));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void loadGames(List<Session> senderSessions, AuthData auth, int gameId) throws DataAccessException {
+        ServerMessage sendBack = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+        GameData game = Server.gameDAO.getGame(gameId);
+        sendBack.game = game;
+        sendBack.auth = auth;
+        sendBack.message = null;
+
+        for (Session senderSession : senderSessions) {
+            if (senderSession.isOpen()) {
+                try {
+                    senderSession.getRemote().sendString(GSON.toJson(sendBack, ServerMessage.class));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void assignGame(Session senderSession, String gameID) {
+        Integer targetGameId = Integer.valueOf(gameID);
+
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
+            if (entry.getValue().equals(targetGameId)) {
+                entry.getKey().put(senderSession, new PlayerInfo("", "observer", false));
+                return;
+            }
+        }
+
+        ConcurrentHashMap<Session, PlayerInfo> newSessionMap = new ConcurrentHashMap<>();
+        newSessionMap.put(senderSession, new PlayerInfo("", "observer", false));
+        ORGANIZED_SESSIONS.put(newSessionMap, targetGameId);
+    }
 
     public void assignId(Session senderSession, String id, int gameID) {
         for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
@@ -370,20 +369,18 @@ public class ServerWebSocketHandler {
         }
     }
 
-
-    public void assignGame(Session senderSession, String gameID) {
-        Integer targetGameId = Integer.valueOf(gameID);
-
-        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
-            if (entry.getValue().equals(targetGameId)) {
-                entry.getKey().put(senderSession, new PlayerInfo("", "observer", false));
-                return;
+    public void assignIdForSession(Session senderSession, String id) {
+        for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : ORGANIZED_SESSIONS.keySet()) {
+            if (sessionMap.containsKey(senderSession)) {
+                PlayerInfo info = sessionMap.get(senderSession);
+                if (info != null) {
+                    info.setAuthToken(id);
+                } else {
+                    sessionMap.put(senderSession, new PlayerInfo(id, "observer", false));
+                }
+                break;
             }
         }
-
-        ConcurrentHashMap<Session, PlayerInfo> newSessionMap = new ConcurrentHashMap<>();
-        newSessionMap.put(senderSession, new PlayerInfo("", "observer", false));
-        ORGANIZED_SESSIONS.put(newSessionMap, targetGameId);
     }
 
     public void assignRole(Session senderSession, String role, String token, boolean hasResigned, int gameID) {
@@ -429,6 +426,7 @@ public class ServerWebSocketHandler {
         }
         return null;
     }
+
     public String getAuthTokenBySession(Session sessionToCheck) {
         for (ConcurrentHashMap<Session, PlayerInfo> sessionMap : ORGANIZED_SESSIONS.keySet()) {
             if (sessionMap.containsKey(sessionToCheck)) {
@@ -454,23 +452,33 @@ public class ServerWebSocketHandler {
             }
         }
     }
-    public boolean hasAnyoneResigned(int gameID) {
-        List<PlayerInfo> playersInGame = new ArrayList<>();
 
+    public boolean hasAnyoneResigned(int gameID) {
         for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID) {
                 ConcurrentHashMap<Session, PlayerInfo> sessionMap = entry.getKey();
                 for (PlayerInfo info : sessionMap.values()) {
                     if (info != null) {
-                        if(info.hasResigned == true){return true;}
+                        if (info.hasResigned == true) {
+                            return true;
+                        }
                     }
                 }
                 break;
             }
         }
-
         return false;
     }
+
+    public boolean sessionExistsInGame(Session sessionToCheck, int gameID) {
+        for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
+            if (entry.getValue() == gameID) {
+                return entry.getKey().containsKey(sessionToCheck);
+            }
+        }
+        return false;
+    }
+
     public void removePlayerFromGame(Session sessionToRemove, int gameID) {
         for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameID) {
@@ -481,17 +489,32 @@ public class ServerWebSocketHandler {
         }
     }
 
-
     public List<Session> getSessionsByGameId(int gameId) {
         List<Session> sessions = new ArrayList<>();
-
         for (Map.Entry<ConcurrentHashMap<Session, PlayerInfo>, Integer> entry : ORGANIZED_SESSIONS.entrySet()) {
             if (entry.getValue() == gameId) {
                 sessions.addAll(entry.getKey().keySet());
                 break;
             }
         }
-
         return sessions;
+    }
+
+    public String getPlayerColor(AuthData token) throws DataAccessException {
+        Collection<GameData> games = Server.gameDAO.getGames();
+        for (GameData game : games) {
+            if (game.blackUsername() != null && game.blackUsername().equals(token.username())) {
+                return "black";
+            }
+            if (game.whiteUsername() != null && game.whiteUsername().equals(token.username())) {
+                return "white";
+            }
+        }
+        return "";
+    }
+
+    public static String getLetter(int num) {
+        String[] letters = {"", "a", "b", "c", "d", "e", "f", "g", "h"};
+        return (num >= 1 && num <= 8) ? letters[num] : "";
     }
 }

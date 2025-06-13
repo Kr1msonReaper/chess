@@ -11,6 +11,7 @@ import javax.websocket.*;
 
 import service.CreateGameRequest;
 import service.JoinGameRequest;
+import shared.ServerFacade;
 import ui.EscapeSequences;
 import websocket.commands.UserGameCommand;
 
