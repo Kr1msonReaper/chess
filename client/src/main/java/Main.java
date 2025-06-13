@@ -113,7 +113,8 @@ public class Main {
             board.append(EscapeSequences.SET_BG_COLOR_BLACK).append("\n");
         }
     }
-    private static Boolean drawSquare(StringBuilder board, ChessPiece piece, String prettyPiece, Boolean isWhite, int y, int x, boolean isWhite2, Collection<ChessMove> moves) {
+    private static Boolean drawSquare(StringBuilder board, ChessPiece piece, String prettyPiece,
+                                      Boolean isWhite, int y, int x, boolean isWhite2, Collection<ChessMove> moves) {
         boolean isListed = false;
         for(ChessMove pos : moves){
             if(pos.getEndPosition().x == x && pos.getEndPosition().y == y || pos.getStartPosition().x == x && pos.getStartPosition().y == y){
@@ -138,7 +139,8 @@ public class Main {
         if(piece == null){
             board.append(EscapeSequences.SET_TEXT_COLOR_WHITE).append(prettyPiece);
         } else {
-            String textColor = piece.getTeamColor() == ChessGame.TeamColor.WHITE ? EscapeSequences.SET_TEXT_COLOR_WHITE : EscapeSequences.SET_TEXT_COLOR_BLACK;
+            String textColor = piece.getTeamColor() == ChessGame.TeamColor.WHITE ?
+                    EscapeSequences.SET_TEXT_COLOR_WHITE : EscapeSequences.SET_TEXT_COLOR_BLACK;
             board.append(textColor).append(prettyPiece);
         }
         int lastY = isWhite2 ? 8 : 1;
@@ -254,13 +256,18 @@ public class Main {
     }
     private static void handleHelpCommand(boolean isLoggedIn, boolean isInGame) {
         if(isInGame){
-            System.out.println("help - discover what actions you can take.\nredraw chess board - view the current board.\nleave - leave the game.\nmake move <1-8> <a-h> to <1-8> <a-h> - move a piece.\nresign - forfeit the game.\nhighlight legal moves <1-8> <a-h> - view possible moves.\nhelp - with possible commands");
+            System.out.println("help - discover what actions you can take.\nredraw chess board - view the current board.\n" +
+                    "leave - leave the game.\nmake move <1-8> <a-h> to <1-8> <a-h> - move a piece.\nresign - forfeit the game.\n" +
+                    "highlight legal moves <1-8> <a-h> - view possible moves.\nhelp - with possible commands");
             return;
         }
         if(!isLoggedIn){
-            System.out.println("Register <USERNAME> <PASSWORD> <EMAIL> - to create an account\nlogin <USERNAME> <PASSWORD> - to play chess\nquit - playing chess\nhelp - with possible commands");
+            System.out.println("Register <USERNAME> <PASSWORD> <EMAIL> - to create an account\n" +
+                    "login <USERNAME> <PASSWORD> - to play chess\nquit - playing chess\nhelp - with possible commands");
         } else {
-            System.out.println("quit - playing chess\nhelp - with possible commands\nlogout - log out\ncreate <NAME> - create a new game.\nlist - list existing game id's.\njoin <GAME-ID> <DESIRED-COLOR> - join an existing game.\nobserve <GAME-ID> - observe a game in progress.");
+            System.out.println("quit - playing chess\n" +
+                    "help - with possible commands\nlogout - log out\ncreate <NAME> - create a new game.\nlist - list existing game id's.\n" +
+                    "join <GAME-ID> <DESIRED-COLOR> - join an existing game.\nobserve <GAME-ID> - observe a game in progress.");
         }
     }
     private static CommandResult handleRegisterCommand(String[] line) {
