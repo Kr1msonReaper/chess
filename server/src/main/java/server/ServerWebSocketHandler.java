@@ -339,12 +339,10 @@ public class ServerWebSocketHandler {
         if (game == null) {
             return;
         }
-
         getGameSessionMap(gameId).ifPresent(sessionMap -> {
             for (Map.Entry<Session, PlayerInfo> entry : sessionMap.entrySet()) {
                 Session session = entry.getKey();
                 PlayerInfo playerInfo = entry.getValue();
-
                 try {
                     AuthData auth = Server.authDAO.getAuth(playerInfo.getAuthToken());
                     if (auth != null) {
@@ -356,7 +354,6 @@ public class ServerWebSocketHandler {
             }
         });
     }
-
     public void assignGame(Session session, String gameID) {
         Integer targetGameId = Integer.valueOf(gameID);
 
